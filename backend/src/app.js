@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const notFound = require("./middleware/notFound");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -14,5 +16,10 @@ app.get("/api/health", (req, res) => {
     message: "Group 26 API is running",
   });
 });
+
+// B8 - Error handling middleware
+// Keep these after all API routes
+app.use(notFound);
+app.use(errorHandler);
 
 module.exports = app;
