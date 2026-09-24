@@ -16,7 +16,7 @@ const { generateAccessToken } = require("../utils/auth");
 // Create user
 const create = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -37,7 +37,6 @@ const create = async (req, res) => {
       name,
       email,
       hashedPassword,
-      role
     );
 
     res.status(201).json({
