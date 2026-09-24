@@ -1,4 +1,3 @@
-```js
 const express = require("express");
 const cors = require("cors");
 const notFound = require("./middleware/notFound");
@@ -33,4 +32,3 @@ app.use(notFound);
 app.use(errorHandler);
 
 module.exports = app;
-```
