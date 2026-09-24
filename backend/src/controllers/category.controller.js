@@ -1,4 +1,4 @@
-const categoryModel = require("../models/category.model");
+const categoryService = require("../services/category.service");
 
 // Create category
 const createCategory = async (req, res) => {
@@ -12,7 +12,7 @@ const createCategory = async (req, res) => {
       });
     }
 
-    const category = await categoryModel.createCategory(
+    const category = await categoryService.createCategory(
       name.trim(),
       description || null
     );
@@ -42,7 +42,7 @@ const createCategory = async (req, res) => {
 // Get all categories
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await categoryModel.getAllCategories();
+    const categories = await categoryService.getAllCategories();
 
     res.status(200).json({
       success: true,
@@ -63,7 +63,7 @@ const getCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const category = await categoryModel.getCategoryById(id);
+    const category = await categoryService.getCategoryById(id);
 
     if (!category) {
       return res.status(404).json({
@@ -99,7 +99,7 @@ const updateCategory = async (req, res) => {
       });
     }
 
-    const category = await categoryModel.updateCategory(
+    const category = await categoryService.updateCategory(
       id,
       name.trim(),
       description || null
@@ -139,7 +139,7 @@ const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const category = await categoryModel.deleteCategory(id);
+    const category = await categoryService.deleteCategory(id);
 
     if (!category) {
       return res.status(404).json({

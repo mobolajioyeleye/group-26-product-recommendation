@@ -1,4 +1,4 @@
-const productModel = require("../models/product.model");
+const productService = require("../services/product.service");
 
 // Create product
 const createProduct = async (req, res) => {
@@ -40,7 +40,7 @@ const createProduct = async (req, res) => {
       });
     }
 
-    const product = await productModel.createProduct(
+    const product = await productService.createProduct(
       name.trim(),
       description || null,
       price,
@@ -74,7 +74,7 @@ const createProduct = async (req, res) => {
 // Get all products
 const getAllProducts = async (req, res) => {
   try {
-    const products = await productModel.getAllProducts();
+    const products = await productService.getAllProducts();
 
     res.status(200).json({
       success: true,
@@ -95,7 +95,7 @@ const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await productModel.getProductById(id);
+    const product = await productService.getProductById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -130,7 +130,7 @@ const searchProducts = async (req, res) => {
       });
     }
 
-    const products = await productModel.searchProducts(q.trim());
+    const products = await productService.searchProducts(q.trim());
 
     res.status(200).json({
       success: true,
@@ -151,7 +151,7 @@ const getProductsByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
 
-    const products = await productModel.getProductsByCategory(categoryId);
+    const products = await productService.getProductsByCategory(categoryId);
 
     res.status(200).json({
       success: true,
@@ -209,7 +209,7 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    const product = await productModel.updateProduct(
+    const product = await productService.updateProduct(
       id,
       name.trim(),
       description || null,
@@ -253,7 +253,7 @@ const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await productModel.deleteProduct(id);
+    const product = await productService.deleteProduct(id);
 
     if (!product) {
       return res.status(404).json({
