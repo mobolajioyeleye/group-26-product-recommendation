@@ -1,5 +1,8 @@
+```js
 const express = require("express");
 const cors = require("cors");
+const notFound = require("./middleware/notFound");
+const errorHandler = require("./middleware/errorHandler");
 
 const categoryRoutes = require("./routes/category.routes");
 const productRoutes = require("./routes/product.routes");
@@ -18,10 +21,16 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Category routes
+// B5 - Category routes
 app.use("/api/categories", categoryRoutes);
 
-// Product routes 
+// B5 - Product routes
 app.use("/api/products", productRoutes);
 
+// B8 - Error handling middleware
+// Keep these after all API routes
+app.use(notFound);
+app.use(errorHandler);
+
 module.exports = app;
+```

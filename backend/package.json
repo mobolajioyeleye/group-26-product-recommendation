@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
-    "migrate": "dotenv -e .env -- node-pg-migrate --migrations-dir ../database/migrations up"
+    "migrate": "dotenv run -f .env -- node-pg-migrate up -m ../database/migrations",
+    "seed": "dotenv run -f .env -- node scripts/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,6 @@
     "pg": "^8.23.0"
   },
   "devDependencies": {
-    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.14"
   }
 }
