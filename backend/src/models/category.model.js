@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 
+// Create a new category
 const createCategory = async (name, description) => {
   const result = await pool.query(
     `INSERT INTO categories (name, description)
@@ -11,6 +12,7 @@ const createCategory = async (name, description) => {
   return result.rows[0];
 };
 
+// Retrieve all categories ordered alphabetically by name
 const getAllCategories = async () => {
   const result = await pool.query(
     `SELECT id, name, description
@@ -21,6 +23,7 @@ const getAllCategories = async () => {
   return result.rows;
 };
 
+// Retrieve a single category by ID
 const getCategoryById = async (id) => {
   const result = await pool.query(
     `SELECT id, name, description
@@ -32,6 +35,7 @@ const getCategoryById = async (id) => {
   return result.rows[0];
 };
 
+// Update a category's name and description by ID
 const updateCategory = async (id, name, description) => {
   const result = await pool.query(
     `UPDATE categories
@@ -45,6 +49,7 @@ const updateCategory = async (id, name, description) => {
   return result.rows[0];
 };
 
+// Delete a category by ID
 const deleteCategory = async (id) => {
   const result = await pool.query(
     `DELETE FROM categories
