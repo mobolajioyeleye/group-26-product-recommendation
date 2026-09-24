@@ -28,18 +28,18 @@ router.post("/logout", logout);
 //protected routes
 
 // Get all users
-router.get("/",authenticate, authorize("Administrator", "super_admin"), getAll);
+router.get("/",authenticate, authorize("Administrator"), getAll);
 
 // Get user by ID
 router.get("/:id",authenticate, getOne);
 
 // Update user
-router.put("/:id",authenticate,authorize("Administrator", "super_admin"), update);
+router.put("/:id",authenticate,authorize("Administrator"), update);
 
 // Update password
 router.patch("/:id/password", authenticate, updatePassword);
 
 // Delete user
-router.delete("/:id",authenticate, authorize("Administrator", "super_admin"), remove);
+router.delete("/:id",authenticate, authorize("Administrator"), remove);
 
 module.exports = router;
