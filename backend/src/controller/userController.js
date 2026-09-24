@@ -37,6 +37,7 @@ const create = async (req, res) => {
       name,
       email,
       hashedPassword,
+      "User",
     );
 
     res.status(201).json({
@@ -208,6 +209,13 @@ const updatePassword = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Password is required",
+      });
+    }
+    // Only the account owner or an Administrator can change the password
+    if (req.user.id !== id && req.user.role !== "Administrator") {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to change this user's password",
       });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
