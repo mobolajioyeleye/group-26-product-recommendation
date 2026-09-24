@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 
+// Add a product to a user's favourites
 const createFavourite = async (userId, productId) => {
   const result = await pool.query(
     `INSERT INTO favourites (user_id, product_id)
@@ -11,6 +12,7 @@ const createFavourite = async (userId, productId) => {
   return result.rows[0];
 };
 
+// Retrieve all favourite records ordered by creation date
 const getAllFavourites = async () => {
   const result = await pool.query(
     `SELECT user_id, product_id, created_at
@@ -21,6 +23,7 @@ const getAllFavourites = async () => {
   return result.rows;
 };
 
+// Check or retrieve a favourite record by user ID and product ID
 const getFavouriteByUserAndProduct = async (userId, productId) => {
   const result = await pool.query(
     `SELECT user_id, product_id, created_at
@@ -33,6 +36,7 @@ const getFavouriteByUserAndProduct = async (userId, productId) => {
   return result.rows[0];
 };
 
+// Retrieve all favourites for a specific user
 const getFavouritesByUser = async (userId) => {
   const result = await pool.query(
     `SELECT user_id, product_id, created_at
@@ -45,6 +49,7 @@ const getFavouritesByUser = async (userId) => {
   return result.rows;
 };
 
+// Retrieve all favourite entries for a specific product
 const getFavouritesByProduct = async (productId) => {
   const result = await pool.query(
     `SELECT user_id, product_id, created_at
@@ -57,6 +62,7 @@ const getFavouritesByProduct = async (productId) => {
   return result.rows;
 };
 
+// Remove a product from a user's favourites
 const deleteFavourite = async (userId, productId) => {
   const result = await pool.query(
     `DELETE FROM favourites

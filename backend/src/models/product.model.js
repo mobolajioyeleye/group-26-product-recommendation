@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 
+// Create a new product
 const createProduct = async (
   name,
   description,
@@ -20,6 +21,7 @@ const createProduct = async (
   return result.rows[0];
 };
 
+// Retrieve all products ordered by creation date
 const getAllProducts = async () => {
   const result = await pool.query(
     `SELECT id, name, description, price, category_id, image_url, stock,
@@ -31,6 +33,7 @@ const getAllProducts = async () => {
   return result.rows;
 };
 
+// Retrieve a single product by ID
 const getProductById = async (id) => {
   const result = await pool.query(
     `SELECT id, name, description, price, category_id, image_url, stock,
@@ -43,6 +46,7 @@ const getProductById = async (id) => {
   return result.rows[0];
 };
 
+// Retrieve all products belonging to a specific category
 const getProductsByCategory = async (categoryId) => {
   const result = await pool.query(
     `SELECT id, name, description, price, category_id, image_url, stock,
@@ -56,6 +60,7 @@ const getProductsByCategory = async (categoryId) => {
   return result.rows;
 };
 
+// Search products by name or description
 const searchProducts = async (searchTerm) => {
   const result = await pool.query(
     `SELECT id, name, description, price, category_id, image_url, stock,
@@ -70,6 +75,7 @@ const searchProducts = async (searchTerm) => {
   return result.rows;
 };
 
+// Update product details and update timestamp by ID
 const updateProduct = async (
   id,
   name,
@@ -97,6 +103,7 @@ const updateProduct = async (
   return result.rows[0];
 };
 
+// Delete a product by ID
 const deleteProduct = async (id) => {
   const result = await pool.query(
     `DELETE FROM products

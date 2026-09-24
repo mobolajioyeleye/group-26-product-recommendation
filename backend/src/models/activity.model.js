@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 
+// Record a new user activity (e.g., VIEW, FAVOURITE)
 const createActivity = async (userId, productId, activityType) => {
   const result = await pool.query(
     `INSERT INTO activities (user_id, product_id, activity_type)
@@ -11,6 +12,7 @@ const createActivity = async (userId, productId, activityType) => {
   return result.rows[0];
 };
 
+// Retrieve all activities ordered by creation date
 const getAllActivities = async () => {
   const result = await pool.query(
     `SELECT id, user_id, product_id, activity_type, created_at
@@ -21,6 +23,7 @@ const getAllActivities = async () => {
   return result.rows;
 };
 
+// Retrieve a single activity record by ID
 const getActivityById = async (id) => {
   const result = await pool.query(
     `SELECT id, user_id, product_id, activity_type, created_at
@@ -32,6 +35,7 @@ const getActivityById = async (id) => {
   return result.rows[0];
 };
 
+// Retrieve all activities performed by a specific user
 const getActivitiesByUser = async (userId) => {
   const result = await pool.query(
     `SELECT id, user_id, product_id, activity_type, created_at
@@ -44,6 +48,7 @@ const getActivitiesByUser = async (userId) => {
   return result.rows;
 };
 
+// Retrieve all activities associated with a specific product
 const getActivitiesByProduct = async (productId) => {
   const result = await pool.query(
     `SELECT id, user_id, product_id, activity_type, created_at
@@ -56,6 +61,7 @@ const getActivitiesByProduct = async (productId) => {
   return result.rows;
 };
 
+// Retrieve activities for a specific user and product combination
 const getUserProductActivities = async (userId, productId) => {
   const result = await pool.query(
     `SELECT id, user_id, product_id, activity_type, created_at
@@ -69,6 +75,7 @@ const getUserProductActivities = async (userId, productId) => {
   return result.rows;
 };
 
+// Delete an activity record by ID
 const deleteActivity = async (id) => {
   const result = await pool.query(
     `DELETE FROM activities
