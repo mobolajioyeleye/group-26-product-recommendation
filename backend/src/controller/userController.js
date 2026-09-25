@@ -134,6 +134,13 @@ const getOne = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (req.user.id !== id && req.user.role !== "Administrator") {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view this user",
+      });
+    }
+
     const user = await getUserById(id);
 
     if (!user) {
@@ -149,7 +156,7 @@ const getOne = async (req, res) => {
     });
   } catch (error) {
     console.error("Get user error:", error);
-
+    next(error);
     res.status(500).json({
       success: false,
       message: "Failed to get user",
