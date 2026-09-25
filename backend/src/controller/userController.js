@@ -156,7 +156,6 @@ const getOne = async (req, res) => {
     });
   } catch (error) {
     console.error("Get user error:", error);
-    next(error);
     res.status(500).json({
       success: false,
       message: "Failed to get user",
