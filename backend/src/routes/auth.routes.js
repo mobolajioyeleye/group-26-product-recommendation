@@ -2,19 +2,19 @@ const express = require("express");
 
 const router = express.Router();
 
-const validateRequest = require("../middleware/validation.middleware");
-
 const {
-  validateRegistration,
-  validateLogin,
+  registerValidator,
+  loginValidator,
 } = require("../validators/auth.validator");
+
+const validateRequest = require("../middleware/validation.middleware");
 
 const authController = require("../controllers/auth.controller");
 
 // Register
 router.post(
   "/register",
-  validateRegistration,
+  registerValidator,
   validateRequest,
   authController.register
 );
@@ -22,7 +22,7 @@ router.post(
 // Login
 router.post(
   "/login",
-  validateLogin,
+  loginValidator,
   validateRequest,
   authController.login
 );

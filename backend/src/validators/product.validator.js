@@ -1,34 +1,33 @@
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 
-// Create product
-const validateCreateProduct = [
+const createProductValidator = [
   body("name")
     .trim()
     .notEmpty()
     .withMessage("Product name is required")
-    .isLength({ min: 2, max: 255 })
-    .withMessage("Product name must be between 2 and 255 characters"),
+    .isLength({ min: 2, max: 150 })
+    .withMessage("Product name must be between 2 and 150 characters"),
 
   body("description")
     .optional()
     .trim()
-    .isLength({ max: 5000 })
-    .withMessage("Description cannot exceed 5000 characters"),
+    .isLength({ max: 2000 })
+    .withMessage("Description cannot exceed 2000 characters"),
 
   body("price")
     .notEmpty()
     .withMessage("Price is required")
     .isFloat({ min: 0 })
-    .withMessage("Price must be a valid positive number"),
+    .withMessage("Price must be a positive number"),
 
   body("categoryId")
     .notEmpty()
     .withMessage("Category ID is required")
-    .isInt({ min: 1 })
-    .withMessage("Category ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Category ID must be a valid UUID"),
 
   body("imageUrl")
-    .optional({ nullable: true })
+    .optional({ checkFalsy: true })
     .trim()
     .isURL()
     .withMessage("Image URL must be a valid URL"),
@@ -40,39 +39,38 @@ const validateCreateProduct = [
     .withMessage("Stock must be a non-negative integer"),
 ];
 
-// Update product
-const validateUpdateProduct = [
+const updateProductValidator = [
   param("id")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 
   body("name")
     .trim()
     .notEmpty()
     .withMessage("Product name is required")
-    .isLength({ min: 2, max: 255 })
-    .withMessage("Product name must be between 2 and 255 characters"),
+    .isLength({ min: 2, max: 150 })
+    .withMessage("Product name must be between 2 and 150 characters"),
 
   body("description")
     .optional()
     .trim()
-    .isLength({ max: 5000 })
-    .withMessage("Description cannot exceed 5000 characters"),
+    .isLength({ max: 2000 })
+    .withMessage("Description cannot exceed 2000 characters"),
 
   body("price")
     .notEmpty()
     .withMessage("Price is required")
     .isFloat({ min: 0 })
-    .withMessage("Price must be a valid positive number"),
+    .withMessage("Price must be a positive number"),
 
   body("categoryId")
     .notEmpty()
     .withMessage("Category ID is required")
-    .isInt({ min: 1 })
-    .withMessage("Category ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Category ID must be a valid UUID"),
 
   body("imageUrl")
-    .optional({ nullable: true })
+    .optional({ checkFalsy: true })
     .trim()
     .isURL()
     .withMessage("Image URL must be a valid URL"),
@@ -84,23 +82,31 @@ const validateUpdateProduct = [
     .withMessage("Stock must be a non-negative integer"),
 ];
 
-// Product ID
-const validateProductId = [
+const productIdValidator = [
   param("id")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 ];
 
-// Category ID
-const validateProductCategory = [
+const categoryProductValidator = [
   param("categoryId")
-    .isInt({ min: 1 })
-    .withMessage("Category ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Category ID must be a valid UUID"),
+];
+
+const searchProductValidator = [
+  query("search")
+    .trim()
+    .notEmpty()
+    .withMessage("Search term is required")
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Search term must be between 1 and 100 characters"),
 ];
 
 module.exports = {
-  validateCreateProduct,
-  validateUpdateProduct,
-  validateProductId,
-  validateProductCategory,
+  createProductValidator,
+  updateProductValidator,
+  productIdValidator,
+  categoryProductValidator,
+  searchProductValidator,
 };

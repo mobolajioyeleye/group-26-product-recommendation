@@ -2,19 +2,19 @@ const express = require("express");
 
 const router = express.Router();
 
-const validateRequest = require("../middleware/validation.middleware");
-
 const {
-  validateCreateCategory,
-  validateUpdateCategory,
-  validateCategoryId,
+  createCategoryValidator,
+  updateCategoryValidator,
+  categoryIdValidator,
 } = require("../validators/category.validator");
+
+const validateRequest = require("../middleware/validation.middleware");
 
 const categoryController = require("../controllers/category.controller");
 
 router.post(
   "/",
-  validateCreateCategory,
+  createCategoryValidator,
   validateRequest,
   categoryController.createCategory
 );
@@ -26,21 +26,21 @@ router.get(
 
 router.get(
   "/:id",
-  validateCategoryId,
+  categoryIdValidator,
   validateRequest,
   categoryController.getCategoryById
 );
 
 router.put(
   "/:id",
-  validateUpdateCategory,
+  updateCategoryValidator,
   validateRequest,
   categoryController.updateCategory
 );
 
 router.delete(
   "/:id",
-  validateCategoryId,
+  categoryIdValidator,
   validateRequest,
   categoryController.deleteCategory
 );

@@ -2,47 +2,52 @@ const express = require("express");
 
 const router = express.Router();
 
-const validateRequest = require("../middleware/validation.middleware");
-
 const {
-  validateFavourite,
-  validateFavouriteUser,
-  validateFavouriteProduct,
+  productFavouriteValidator,
+  userIdValidator,
+  productIdFavouriteValidator,
 } = require("../validators/favourite.validator");
+
+const validateRequest = require("../middleware/validation.middleware");
 
 const favouriteController = require("../controllers/favourite.controller");
 
+// Add favourite
 router.post(
   "/:userId/:productId",
-  validateFavourite,
+  productFavouriteValidator,
   validateRequest,
   favouriteController.createFavourite
 );
 
+// Get all favourites for a user
 router.get(
   "/user/:userId",
-  validateFavouriteUser,
+  userIdValidator,
   validateRequest,
   favouriteController.getFavouritesByUser
 );
 
+// Get favourites for a product
 router.get(
   "/product/:productId",
-  validateFavouriteProduct,
+  productIdFavouriteValidator,
   validateRequest,
   favouriteController.getFavouritesByProduct
 );
 
+// Get specific favourite
 router.get(
   "/:userId/:productId",
-  validateFavourite,
+  productFavouriteValidator,
   validateRequest,
   favouriteController.getFavouriteByUserAndProduct
 );
 
+// Delete favourite
 router.delete(
   "/:userId/:productId",
-  validateFavourite,
+  productFavouriteValidator,
   validateRequest,
   favouriteController.deleteFavourite
 );

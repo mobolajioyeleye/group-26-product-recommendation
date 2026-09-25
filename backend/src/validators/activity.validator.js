@@ -1,66 +1,57 @@
 const { body, param } = require("express-validator");
 
-const allowedActivityTypes = [
-  "VIEW",
-  "FAVOURITE",
-  "UNFAVOURITE",
-];
-
-const validateCreateActivity = [
+const createActivityValidator = [
   body("userId")
     .notEmpty()
     .withMessage("User ID is required")
-    .isInt({ min: 1 })
-    .withMessage("User ID must be a positive integer"),
+    .isUUID()
+    .withMessage("User ID must be a valid UUID"),
 
   body("productId")
     .notEmpty()
     .withMessage("Product ID is required")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 
   body("activityType")
-    .trim()
     .notEmpty()
     .withMessage("Activity type is required")
-    .isIn(allowedActivityTypes)
-    .withMessage(
-      `Activity type must be one of: ${allowedActivityTypes.join(", ")}`
-    ),
+    .isIn(["VIEW", "FAVOURITE"])
+    .withMessage("Activity type must be either VIEW or FAVOURITE"),
 ];
 
-const validateActivityId = [
+const activityIdValidator = [
   param("id")
-    .isInt({ min: 1 })
-    .withMessage("Activity ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Activity ID must be a valid UUID"),
 ];
 
-const validateActivitiesByUser = [
+const activitiesByUserValidator = [
   param("userId")
-    .isInt({ min: 1 })
-    .withMessage("User ID must be a positive integer"),
+    .isUUID()
+    .withMessage("User ID must be a valid UUID"),
 ];
 
-const validateActivitiesByProduct = [
+const activitiesByProductValidator = [
   param("productId")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 ];
 
-const validateUserProductActivities = [
+const userProductActivityValidator = [
   param("userId")
-    .isInt({ min: 1 })
-    .withMessage("User ID must be a positive integer"),
+    .isUUID()
+    .withMessage("User ID must be a valid UUID"),
 
   param("productId")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 ];
 
 module.exports = {
-  validateCreateActivity,
-  validateActivityId,
-  validateActivitiesByUser,
-  validateActivitiesByProduct,
-  validateUserProductActivities,
+  createActivityValidator,
+  activityIdValidator,
+  activitiesByUserValidator,
+  activitiesByProductValidator,
+  userProductActivityValidator,
 };

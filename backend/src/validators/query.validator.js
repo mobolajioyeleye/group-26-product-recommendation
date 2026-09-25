@@ -1,7 +1,18 @@
 const { query } = require("express-validator");
 
-// Product query parameters
-const validateProductQuery = [
+const paginationValidator = [
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Page must be a positive integer"),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Limit must be between 1 and 100"),
+];
+
+const productQueryValidator = [
   query("search")
     .optional()
     .trim()
@@ -10,8 +21,8 @@ const validateProductQuery = [
 
   query("categoryId")
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("Category ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Category ID must be a valid UUID"),
 
   query("page")
     .optional()
@@ -25,5 +36,6 @@ const validateProductQuery = [
 ];
 
 module.exports = {
-  validateProductQuery,
+  paginationValidator,
+  productQueryValidator,
 };

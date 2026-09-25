@@ -2,57 +2,60 @@ const express = require("express");
 
 const router = express.Router();
 
-const validateRequest = require("../middleware/validation.middleware");
-
 const {
-  validateCreateProduct,
-  validateUpdateProduct,
-  validateProductId,
-  validateProductCategory,
+  createProductValidator,
+  updateProductValidator,
+  productIdValidator,
+  categoryProductValidator,
+  searchProductValidator,
 } = require("../validators/product.validator");
 
-const {
-  validateProductQuery,
-} = require("../validators/query.validator");
+const validateRequest = require("../middleware/validation.middleware");
 
 const productController = require("../controllers/product.controller");
 
 // Create product
 router.post(
   "/",
-  validateCreateProduct,
+  createProductValidator,
   validateRequest,
   productController.createProduct
 );
 
-// Get all/search products
+// Get all products
 router.get(
   "/",
-  validateProductQuery,
-  validateRequest,
   productController.getAllProducts
+);
+
+// Get product by ID
+router.get(
+  "/:id",
+  productIdValidator,
+  validateRequest,
+  productController.getProductById
 );
 
 // Get products by category
 router.get(
   "/category/:categoryId",
-  validateProductCategory,
+  categoryProductValidator,
   validateRequest,
   productController.getProductsByCategory
 );
 
-// Get single product
+// Search products
 router.get(
-  "/:id",
-  validateProductId,
+  "/search",
+  searchProductValidator,
   validateRequest,
-  productController.getProductById
+  productController.searchProducts
 );
 
 // Update product
 router.put(
   "/:id",
-  validateUpdateProduct,
+  updateProductValidator,
   validateRequest,
   productController.updateProduct
 );
@@ -60,7 +63,7 @@ router.put(
 // Delete product
 router.delete(
   "/:id",
-  validateProductId,
+  productIdValidator,
   validateRequest,
   productController.deleteProduct
 );

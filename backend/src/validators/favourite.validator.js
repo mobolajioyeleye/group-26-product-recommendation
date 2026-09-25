@@ -1,29 +1,29 @@
 const { param } = require("express-validator");
 
-const validateFavourite = [
+const userIdValidator = [
   param("userId")
-    .isInt({ min: 1 })
-    .withMessage("User ID must be a positive integer"),
-
-  param("productId")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("User ID must be a valid UUID"),
 ];
 
-const validateFavouriteUser = [
+const productFavouriteValidator = [
   param("userId")
-    .isInt({ min: 1 })
-    .withMessage("User ID must be a positive integer"),
+    .isUUID()
+    .withMessage("User ID must be a valid UUID"),
+
+  param("productId")
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 ];
 
-const validateFavouriteProduct = [
+const productIdFavouriteValidator = [
   param("productId")
-    .isInt({ min: 1 })
-    .withMessage("Product ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Product ID must be a valid UUID"),
 ];
 
 module.exports = {
-  validateFavourite,
-  validateFavouriteUser,
-  validateFavouriteProduct,
+  userIdValidator,
+  productFavouriteValidator,
+  productIdFavouriteValidator,
 };

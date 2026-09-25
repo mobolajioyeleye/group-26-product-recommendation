@@ -2,61 +2,68 @@ const express = require("express");
 
 const router = express.Router();
 
-const validateRequest = require("../middleware/validation.middleware");
-
 const {
-  validateCreateActivity,
-  validateActivityId,
-  validateActivitiesByUser,
-  validateActivitiesByProduct,
-  validateUserProductActivities,
+  createActivityValidator,
+  activityIdValidator,
+  activitiesByUserValidator,
+  activitiesByProductValidator,
+  userProductActivityValidator,
 } = require("../validators/activity.validator");
+
+const validateRequest = require("../middleware/validation.middleware");
 
 const activityController = require("../controllers/activity.controller");
 
+// Create activity
 router.post(
   "/",
-  validateCreateActivity,
+  createActivityValidator,
   validateRequest,
   activityController.createActivity
 );
 
+// Get all activities
 router.get(
   "/",
   activityController.getAllActivities
 );
 
+// Get activity by ID
 router.get(
   "/:id",
-  validateActivityId,
+  activityIdValidator,
   validateRequest,
   activityController.getActivityById
 );
 
+// Get activities by user
 router.get(
   "/user/:userId",
-  validateActivitiesByUser,
+  activitiesByUserValidator,
   validateRequest,
   activityController.getActivitiesByUser
 );
 
+// Get activities by product
 router.get(
   "/product/:productId",
-  validateActivitiesByProduct,
+  activitiesByProductValidator,
   validateRequest,
   activityController.getActivitiesByProduct
 );
 
+// Get activities by user and product
 router.get(
   "/user/:userId/product/:productId",
-  validateUserProductActivities,
+  userProductActivityValidator,
   validateRequest,
   activityController.getUserProductActivities
 );
 
+// Delete activity
 router.delete(
   "/:id",
-  validateActivityId,
+  activityIdValidator,
   validateRequest,
   activityController.deleteActivity
 );

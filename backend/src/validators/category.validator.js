@@ -1,7 +1,6 @@
 const { body, param } = require("express-validator");
 
-// Create category
-const validateCreateCategory = [
+const createCategoryValidator = [
   body("name")
     .trim()
     .notEmpty()
@@ -16,11 +15,10 @@ const validateCreateCategory = [
     .withMessage("Description cannot exceed 1000 characters"),
 ];
 
-// Update category
-const validateUpdateCategory = [
+const updateCategoryValidator = [
   param("id")
-    .isInt({ min: 1 })
-    .withMessage("Category ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Category ID must be a valid UUID"),
 
   body("name")
     .trim()
@@ -36,15 +34,14 @@ const validateUpdateCategory = [
     .withMessage("Description cannot exceed 1000 characters"),
 ];
 
-// Category ID
-const validateCategoryId = [
+const categoryIdValidator = [
   param("id")
-    .isInt({ min: 1 })
-    .withMessage("Category ID must be a positive integer"),
+    .isUUID()
+    .withMessage("Category ID must be a valid UUID"),
 ];
 
 module.exports = {
-  validateCreateCategory,
-  validateUpdateCategory,
-  validateCategoryId,
+  createCategoryValidator,
+  updateCategoryValidator,
+  categoryIdValidator,
 };

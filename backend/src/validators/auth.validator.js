@@ -1,7 +1,6 @@
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 
-// Registration validation
-const validateRegistration = [
+const registerValidator = [
   body("name")
     .trim()
     .notEmpty()
@@ -14,7 +13,7 @@ const validateRegistration = [
     .notEmpty()
     .withMessage("Email is required")
     .isEmail()
-    .withMessage("Please provide a valid email")
+    .withMessage("Please provide a valid email address")
     .normalizeEmail(),
 
   body("password")
@@ -28,16 +27,21 @@ const validateRegistration = [
     .withMessage("Password must contain at least one lowercase letter")
     .matches(/[0-9]/)
     .withMessage("Password must contain at least one number"),
+
+  body("role")
+    .optional()
+    .trim()
+    .isIn(["User", "Admin"])
+    .withMessage("Role must be either User or Admin"),
 ];
 
-// Login validation
-const validateLogin = [
+const loginValidator = [
   body("email")
     .trim()
     .notEmpty()
     .withMessage("Email is required")
     .isEmail()
-    .withMessage("Please provide a valid email")
+    .withMessage("Please provide a valid email address")
     .normalizeEmail(),
 
   body("password")
@@ -45,15 +49,7 @@ const validateLogin = [
     .withMessage("Password is required"),
 ];
 
-// User ID validation
-const validateUserId = [
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("User ID must be a positive integer"),
-];
-
 module.exports = {
-  validateRegistration,
-  validateLogin,
-  validateUserId,
+  registerValidator,
+  loginValidator,
 };
