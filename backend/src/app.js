@@ -2,12 +2,21 @@ const express = require("express");
 const cors = require("cors");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
+const userRoutes = require("./routes/userRoute");
+const cookieParser = require("cookie-parser");
+
+const categoryRoutes = require("./routes/category.routes");
+const productRoutes = require("./routes/product.routes");
 
 const app = express();
+
 
 // Common middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+
+
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -16,6 +25,14 @@ app.get("/api/health", (req, res) => {
     message: "Group 26 API is running",
   });
 });
+//userRoute
+app.use("/users", userRoutes);
+
+// B5 - Category routes
+app.use("/api/categories", categoryRoutes);
+
+// B5 - Product routes
+app.use("/api/products", productRoutes);
 
 // B8 - Error handling middleware
 // Keep these after all API routes
