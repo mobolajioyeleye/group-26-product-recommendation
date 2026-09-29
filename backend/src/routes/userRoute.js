@@ -9,7 +9,7 @@ const {
   update,
   updatePassword,
   remove,
-} = require("../controller/userController");
+} = require("../controllers/userController");
 
 
 const { authenticate } = require("../middleware/authMiddleware"); 
