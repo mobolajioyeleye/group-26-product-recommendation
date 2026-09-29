@@ -5,6 +5,9 @@ const errorHandler = require("./middleware/errorHandler");
 const userRoutes = require("./routes/userRoute");
 const cookieParser = require("cookie-parser");
 
+const categoryRoutes = require("./routes/category.routes");
+const productRoutes = require("./routes/product.routes");
+
 const app = express();
 
 
@@ -24,6 +27,12 @@ app.get("/api/health", (req, res) => {
 });
 //userRoute
 app.use("/users", userRoutes);
+
+// B5 - Category routes
+app.use("/api/categories", categoryRoutes);
+
+// B5 - Product routes
+app.use("/api/products", productRoutes);
 
 // B8 - Error handling middleware
 // Keep these after all API routes
