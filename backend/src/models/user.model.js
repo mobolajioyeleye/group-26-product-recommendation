@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 
+// Create a new user
 const createUser = async (name, email, password, role = "User") => {
   const result = await pool.query(
     `INSERT INTO users (name, email, password, role)
@@ -11,6 +12,7 @@ const createUser = async (name, email, password, role = "User") => {
   return result.rows[0];
 };
 
+// Retrieve all users ordered by creation date
 const getAllUsers = async () => {
   const result = await pool.query(
     `SELECT id, name, email, role, created_at
@@ -21,6 +23,7 @@ const getAllUsers = async () => {
   return result.rows;
 };
 
+// Retrieve a single user by ID
 const getUserById = async (id) => {
   const result = await pool.query(
     `SELECT id, name, email, role, created_at
@@ -32,6 +35,7 @@ const getUserById = async (id) => {
   return result.rows[0];
 };
 
+// Find a user by email address (includes password for authentication)
 const findUserByEmail = async (email) => {
   const result = await pool.query(
     `SELECT *
@@ -43,6 +47,7 @@ const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
+// Update user details (name, email, role) by ID
 const updateUser = async (id, name, email, role) => {
   const result = await pool.query(
     `UPDATE users
@@ -57,6 +62,7 @@ const updateUser = async (id, name, email, role) => {
   return result.rows[0];
 };
 
+// Update a user's password by ID
 const updateUserPassword = async (id, password) => {
   const result = await pool.query(
     `UPDATE users
@@ -69,6 +75,7 @@ const updateUserPassword = async (id, password) => {
   return result.rows[0];
 };
 
+// Delete a user by ID
 const deleteUser = async (id) => {
   const result = await pool.query(
     `DELETE FROM users
