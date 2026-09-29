@@ -8,21 +8,35 @@ const {
   deleteCategory,
 } = require("../controllers/category.controller");
 
+const { authenticate } = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
-// Create a category
-router.post("/", createCategory);
-
-// Get all categories
+// Public/read routes
 router.get("/", getAllCategories);
-
-// Get one category
 router.get("/:id", getCategoryById);
 
-// Update a category
-router.put("/:id", updateCategory);
+// Administrator-only management routes
+router.post(
+  "/",
+  authenticate,
+  authorize("Administrator"),
+  createCategory
+);
 
-// Delete a category
-router.delete("/:id", deleteCategory);
+router.put(
+  "/:id",
+  authenticate,
+  authorize("Administrator"),
+  updateCategory
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize("Administrator"),
+  deleteCategory
+);
 
 module.exports = router;

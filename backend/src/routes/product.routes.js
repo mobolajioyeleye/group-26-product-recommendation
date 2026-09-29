@@ -10,29 +10,37 @@ const {
   deleteProduct,
 } = require("../controllers/product.controller");
 
+const { authenticate } = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
-// Create a product
-router.post("/", createProduct);
-
-// Get all products
+// Public/read routes
 router.get("/", getAllProducts);
-
-// Search products
-// This must come before /:id
 router.get("/search", searchProducts);
-
-// Get products by category
-// This must come before /:id
 router.get("/category/:categoryId", getProductsByCategory);
-
-// Get one product
 router.get("/:id", getProductById);
 
-// Update a product
-router.put("/:id", updateProduct);
+// Administrator-only management routes
+router.post(
+  "/",
+  authenticate,
+  authorize("Administrator"),
+  createProduct
+);
 
-// Delete a product
-router.delete("/:id", deleteProduct);
+router.put(
+  "/:id",
+  authenticate,
+  authorize("Administrator"),
+  updateProduct
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize("Administrator"),
+  deleteProduct
+);
 
 module.exports = router;
