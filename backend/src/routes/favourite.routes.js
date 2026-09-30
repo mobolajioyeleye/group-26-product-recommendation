@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const favouriteController = require("../controller/favourite.controller");
+const favouriteController = require("../controllers/favourite.controller");
 const { authenticate } = require("../middleware/authMiddleware");
 
 // POST /api/favourites - Add product to favourites
