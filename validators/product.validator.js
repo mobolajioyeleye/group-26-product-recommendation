@@ -96,7 +96,7 @@ const productIdValidator = [
 
 // Products by category
 const categoryProductValidator = [
-  param("category_id")
+  param("categoryId")
     .isUUID()
     .withMessage("Category ID must be a valid UUID"),
 ];
