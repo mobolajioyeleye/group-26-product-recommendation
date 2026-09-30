@@ -184,12 +184,41 @@ const runRecommendationTests = async () => {
     const hasOtherCat = exhaustRecs.recommendations.some((r) => r.category_id !== cat1.id);
     assert(hasOtherCat, "Gracefully backfills products from other categories");
 
+    // Verify strict exclusion: viewed products from Cat 1 must NEVER be recommended
+    const cat1Ids = cat1Products.map((p) => p.id);
+    const exhaustReturnedIds = exhaustRecs.recommendations.map((r) => r.id);
+    const hasAnyViewedCat1 = cat1Ids.some((id) => exhaustReturnedIds.includes(id));
+    assert(!hasAnyViewedCat1, "Strict exclusion: none of the viewed Category 1 products appear in recommendations");
+
     // ----------------------------------------------------
     // Scenario 8: Limit Clamping
     // ----------------------------------------------------
     console.log("\nTesting Scenario 8: Limit Clamping...");
     const clampedRecs = await getRecommendationsForUser(exhaustUser.id, { limit: 100 });
     assert(clampedRecs.recommendations.length <= 20, "Limits recommendations to maximum allowed (20)");
+
+    // ----------------------------------------------------
+    // Scenario 9: Complete Catalog Exhaustion
+    // ----------------------------------------------------
+    console.log("\nTesting Scenario 9: Complete Catalog Exhaustion...");
+    const totalExhaustUser = await createUser(
+      "Total Exhaust User",
+      "total_exhaust_test@example.com",
+      "password_hash"
+    );
+    createdUserIds.push(totalExhaustUser.id);
+
+    // User views every single product in the catalog
+    for (const prod of products) {
+      const act = await createActivity(totalExhaustUser.id, prod.id, "VIEW");
+      createdActivityIds.push(act.id);
+    }
+
+    const totalExhaustRecs = await getRecommendationsForUser(totalExhaustUser.id, { limit: 8 });
+    assert(
+      totalExhaustRecs.recommendations.length === 0,
+      "Strict exclusion: returns empty array when all catalog products have been interacted with"
+    );
 
     console.log("\n==================================================");
     console.log(`ALL RECOMMENDATION TESTS PASSED (${passedTests}/${totalTests})`);

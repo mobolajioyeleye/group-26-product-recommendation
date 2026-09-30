@@ -215,6 +215,16 @@ const runRecommendationApiTests = async () => {
     assert(typeof sampleRec.category_id === "string", "TC-08: Product has category_id");
     assert(sampleRec.recommendation_reason !== undefined, "TC-08: Product has recommendation_reason string");
 
+    // ------------------------------------------------------------------
+    // TEST 9: Query param userId is ignored (prevents IDOR vulnerability)
+    // ------------------------------------------------------------------
+    console.log("\n--- Testing Test 9: Query param userId is ignored ---");
+    const idorRes = await fetch(`${baseUrl}/api/recommendations?userId=${user1.id}`);
+    assert(idorRes.status === 200, "TC-09: Returns HTTP 200 OK");
+    const idorData = await idorRes.json();
+    assert(idorData.meta.personalized === false, "TC-09: Unauthenticated request ignores query userId and serves cold start");
+    assert(idorData.meta.reason === "unauthenticated_cold_start", "TC-09: Reports unauthenticated_cold_start reason");
+
     console.log("\n==================================================");
     console.log(`ALL TASK B7 INTEGRATION TESTS PASSED (${passed}/${total})`);
     console.log("==================================================");

@@ -206,7 +206,8 @@ const getRecommendationsForUser = async (userId, options = {}) => {
     }
   }
 
-  // Fallback 1: If preferred categories did not yield enough alternatives, backfill from other categories
+  // Fallback: If preferred categories did not yield enough alternatives, backfill from other categories
+  // Strict exclusion is maintained: already-interacted products are never recommended
   if (recommendations.length < limit) {
     const allProducts = await productModel.getAllProducts();
 
@@ -221,26 +222,6 @@ const getRecommendationsForUser = async (userId, options = {}) => {
           ...product,
           category_name: categoryMap.get(product.category_id)?.name || null,
           recommendation_reason: "Recommended alternative",
-        });
-        addedProductIds.add(product.id);
-      }
-    }
-  }
-
-  // Fallback 2: If the user has interacted with almost all products in the catalog,
-  // relax view exclusion while keeping active favourites excluded
-  if (recommendations.length < limit) {
-    const activeFavouriteIds = new Set(favourites.map((f) => f.product_id));
-    const allProducts = await productModel.getAllProducts();
-
-    for (const product of allProducts) {
-      if (recommendations.length >= limit) break;
-
-      if (!activeFavouriteIds.has(product.id) && !addedProductIds.has(product.id)) {
-        recommendations.push({
-          ...product,
-          category_name: categoryMap.get(product.category_id)?.name || null,
-          recommendation_reason: "Revisit items you explored",
         });
         addedProductIds.add(product.id);
       }

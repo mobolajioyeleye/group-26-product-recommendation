@@ -2,8 +2,8 @@ const recommendationService = require("../services/recommendation.service");
 
 /**
  * Controller to handle recommendation requests.
- * Extracts authenticated user ID from req.user (when auth middleware is present)
- * or optional userId from query parameters for unauthenticated testing / guest mode.
+ * Extracts authenticated user ID from req.user (populated by auth middleware)
+ * or falls back to null for unauthenticated guest visitors.
  *
  * @route GET /api/recommendations
  * @param {import("express").Request} req
@@ -12,7 +12,7 @@ const recommendationService = require("../services/recommendation.service");
  */
 const getRecommendations = async (req, res, next) => {
   try {
-    const userId = req.user?.id || req.query.userId || null;
+    const userId = req.user?.id || null;
     const limit = req.query.limit;
 
     const result = await recommendationService.getRecommendationsForUser(userId, {
