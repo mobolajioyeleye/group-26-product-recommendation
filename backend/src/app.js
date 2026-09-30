@@ -7,16 +7,16 @@ const cookieParser = require("cookie-parser");
 
 const categoryRoutes = require("./routes/category.routes");
 const productRoutes = require("./routes/product.routes");
+const activityRoutes = require("./routes/activity.routes");
+const favouriteRoutes = require("./routes/favourite.routes");
+const recommendationRoutes = require("./routes/recommendation.routes");
 
 const app = express();
-
 
 // Common middleware
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-
-
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -25,7 +25,8 @@ app.get("/api/health", (req, res) => {
     message: "Group 26 API is running",
   });
 });
-//userRoute
+
+// User routes
 app.use("/users", userRoutes);
 
 // B5 - Category routes
@@ -33,6 +34,15 @@ app.use("/api/categories", categoryRoutes);
 
 // B5 - Product routes
 app.use("/api/products", productRoutes);
+
+// B6 - Activity routes
+app.use("/api/activities", activityRoutes);
+
+// B6 - Favourite routes
+app.use("/api/favourites", favouriteRoutes);
+
+// B7 - Recommendation routes
+app.use("/api/recommendations", recommendationRoutes);
 
 // B8 - Error handling middleware
 // Keep these after all API routes
