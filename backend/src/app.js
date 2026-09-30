@@ -9,6 +9,7 @@ const categoryRoutes = require("./routes/category.routes");
 const productRoutes = require("./routes/product.routes");
 const activityRoutes = require("./routes/activity.routes");
 const favouriteRoutes = require("./routes/favourite.routes");
+const recommendationRoutes = require("./routes/recommendation.routes");
 
 const app = express();
 
@@ -39,6 +40,9 @@ app.use("/api/activities", activityRoutes);
 
 // B6 - Favourite routes
 app.use("/api/favourites", favouriteRoutes);
+
+// B7 - Recommendation routes
+app.use("/api/recommendations", recommendationRoutes);
 
 // B8 - Error handling middleware
 // Keep these after all API routes
