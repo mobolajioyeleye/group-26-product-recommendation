@@ -5,6 +5,11 @@ const errorHandler = require("./middleware/errorHandler");
 const userRoutes = require("./routes/userRoute");
 const cookieParser = require("cookie-parser");
 
+const categoryRoutes = require("./routes/category.routes");
+const productRoutes = require("./routes/product.routes");
+const activityRoutes = require("./routes/activity.routes");
+const favouriteRoutes = require("./routes/favourite.routes");
+
 const app = express();
 
 // Common middleware
@@ -20,14 +25,23 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// userRoute
+// User routes
 app.use("/users", userRoutes);
 
-// Task B6 API Routes
-app.use("/api/activities", require("./routes/activity.routes"));
-app.use("/api/favourites", require("./routes/favourite.routes"));
+// B5 - Category routes
+app.use("/api/categories", categoryRoutes);
 
-// Error handling middleware
+// B5 - Product routes
+app.use("/api/products", productRoutes);
+
+// B6 - Activity routes
+app.use("/api/activities", activityRoutes);
+
+// B6 - Favourite routes
+app.use("/api/favourites", favouriteRoutes);
+
+// B8 - Error handling middleware
+// Keep these after all API routes
 app.use(notFound);
 app.use(errorHandler);
 
