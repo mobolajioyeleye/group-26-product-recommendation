@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const activityController = require("../controller/activity.controller");
+const activityController = require("../controllers/activity.controller");
 const { authenticate } = require("../middleware/authMiddleware");
 
 // POST /api/activities/view - Record a product view
