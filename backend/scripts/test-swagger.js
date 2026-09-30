@@ -57,14 +57,27 @@ const runSwaggerValidation = async () => {
     assert(tagNames.includes("Favourites"), "TC-SWAG-02: Tag 'Favourites' is documented (Task B6)");
     assert(tagNames.includes("Recommendations"), "TC-SWAG-02: Tag 'Recommendations' is documented (Task B7)");
     assert(tagNames.includes("Authentication"), "TC-SWAG-02: Tag 'Authentication' is documented");
-    assert(tagNames.includes("Products"), "TC-SWAG-02: Tag 'Products' is documented (Pending PR)");
-    assert(tagNames.includes("Categories"), "TC-SWAG-02: Tag 'Categories' is documented (Pending PR)");
+    assert(tagNames.includes("Products"), "TC-SWAG-02: Tag 'Products' is documented (Task B5)");
+    assert(tagNames.includes("Categories"), "TC-SWAG-02: Tag 'Categories' is documented (Task B5)");
 
     // ----------------------------------------------------
-    // Test 3: Verify Task B6 & B7 Endpoint Paths
+    // Test 3: Verify Task B5, B6 & B7 Endpoint Paths
     // ----------------------------------------------------
     console.log("\n--- Test 3: Endpoint Paths Coverage ---");
     const paths = Object.keys(spec.paths);
+
+    // Task B5: Categories & Products
+    assert(paths.includes("/api/categories"), "TC-SWAG-03: /api/categories is mapped");
+    assert(spec.paths["/api/categories"].get !== undefined, "TC-SWAG-03: GET /api/categories exists");
+    assert(spec.paths["/api/categories"].post !== undefined, "TC-SWAG-03: POST /api/categories exists");
+    assert(paths.includes("/api/categories/{id}"), "TC-SWAG-03: /api/categories/{id} is mapped");
+
+    assert(paths.includes("/api/products"), "TC-SWAG-03: /api/products is mapped");
+    assert(spec.paths["/api/products"].get !== undefined, "TC-SWAG-03: GET /api/products exists");
+    assert(spec.paths["/api/products"].post !== undefined, "TC-SWAG-03: POST /api/products exists");
+    assert(paths.includes("/api/products/search"), "TC-SWAG-03: GET /api/products/search is mapped");
+    assert(paths.includes("/api/products/category/{categoryId}"), "TC-SWAG-03: GET /api/products/category/{categoryId} is mapped");
+    assert(paths.includes("/api/products/{id}"), "TC-SWAG-03: /api/products/{id} is mapped");
 
     // Task B6
     assert(paths.includes("/api/activities/view"), "TC-SWAG-03: POST /api/activities/view is mapped");
@@ -84,6 +97,8 @@ const runSwaggerValidation = async () => {
     assert(paths.includes("/users/register"), "TC-SWAG-03: POST /users/register is mapped");
     assert(paths.includes("/users/login"), "TC-SWAG-03: POST /users/login is mapped");
     assert(paths.includes("/users/logout"), "TC-SWAG-03: POST /users/logout is mapped");
+    assert(paths.includes("/users/{id}"), "TC-SWAG-03: /users/{id} profile endpoints are mapped");
+    assert(paths.includes("/users/{id}/password"), "TC-SWAG-03: PATCH /users/{id}/password is mapped");
     assert(paths.includes("/api/health"), "TC-SWAG-03: GET /api/health is mapped");
 
     // ----------------------------------------------------
@@ -116,13 +131,28 @@ const runSwaggerValidation = async () => {
     assert(html.toLowerCase().includes("swagger"), "TC-SWAG-05: HTML includes Swagger bundle assets");
 
     // ----------------------------------------------------
-    // Test 6: Verify Health Endpoint Integrity
+    // Test 6: Verify Live Endpoints from Main
     // ----------------------------------------------------
-    console.log("\n--- Test 6: Live API Health Check ---");
+    console.log("\n--- Test 6: Live API Endpoints (Categories, Products, Recommendations, Health) ---");
     const healthRes = await fetch(`${baseUrl}/api/health`);
-    assert(healthRes.status === 200, "TC-SWAG-06: API health check returns HTTP 200 OK");
+    assert(healthRes.status === 200, "TC-SWAG-06: Health check returns HTTP 200 OK");
     const healthData = await healthRes.json();
     assert(healthData.success === true, "TC-SWAG-06: Health check reports success = true");
+
+    const catRes = await fetch(`${baseUrl}/api/categories`);
+    assert(catRes.status === 200, "TC-SWAG-06: Live GET /api/categories returns HTTP 200 OK");
+    const catData = await catRes.json();
+    assert(catData.success === true && Array.isArray(catData.data), "TC-SWAG-06: Categories data is valid array");
+
+    const prodRes = await fetch(`${baseUrl}/api/products`);
+    assert(prodRes.status === 200, "TC-SWAG-06: Live GET /api/products returns HTTP 200 OK");
+    const prodData = await prodRes.json();
+    assert(prodData.success === true && Array.isArray(prodData.data), "TC-SWAG-06: Products data is valid array");
+
+    const recRes = await fetch(`${baseUrl}/api/recommendations`);
+    assert(recRes.status === 200, "TC-SWAG-06: Live GET /api/recommendations returns HTTP 200 OK");
+    const recData = await recRes.json();
+    assert(recData.success === true && Array.isArray(recData.data), "TC-SWAG-06: Recommendations data is valid array");
 
     console.log("\n==================================================");
     console.log(`ALL SWAGGER VALIDATION TESTS PASSED (${passed}/${total})`);
