@@ -1,0 +1,363 @@
+.shop-screen {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.42fr) minmax(0, 0.58fr);
+  column-gap: clamp(24px, 5vw, 72px);
+  align-items: center;
+  overflow: hidden;
+  padding: clamp(22px, 5.5vh, 64px) clamp(20px, 8vw, 120px);
+  background: #ff8b1c;
+  color: #141414;
+}
+
+.shop-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  min-height: min(78vh, 800px);
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 38px 48px 34px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 15px 42px rgba(156, 74, 4, 0.12);
+}
+
+.piqnora-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 26px;
+  color: #222;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.logo-bag {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: #ff8e1e;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+
+.shop-card h1 {
+  margin: 0 0 8px;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.45px;
+}
+
+.shop-intro {
+  margin: 0 0 17px;
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+.shop-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+  color: #101010;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.shop-label input {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  outline: none;
+  background: #dedede;
+  color: #222;
+  font-size: 13px;
+  font-weight: 400;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.shop-label input::placeholder {
+  color: #f8f8f8;
+}
+
+.shop-label input:focus {
+  border-color: #ff971f;
+  background: #f2f2f2;
+  box-shadow: 0 0 0 3px rgba(255, 148, 26, 0.18);
+}
+
+.forgot-link {
+  align-self: flex-start;
+  margin-top: -10px;
+  margin-bottom: 11px;
+  color: #1584d4;
+  font-size: 10px;
+  text-decoration: underline;
+}
+
+.shop-submit {
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 6px;
+  background: #ff9b00;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.shop-submit:hover {
+  background: #f18b00;
+  transform: translateY(-1px);
+}
+
+.shop-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 13px 0 14px;
+  color: #222;
+  font-size: 13px;
+}
+
+.shop-divider span {
+  height: 1px;
+  flex: 1;
+  background: #bdbdbd;
+}
+
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.social-buttons button {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  border: 0;
+  border-radius: 6px;
+  background: #f1f1f1;
+  color: #171717;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.social-buttons button:hover {
+  background: #e8e8e8;
+}
+
+.social-buttons svg {
+  width: 16px;
+  height: 16px;
+}
+
+.account-switch {
+  margin: 14px 0 0;
+  text-align: center;
+  color: #222;
+  font-size: 11px;
+}
+
+.account-switch button {
+  padding: 0 0 0 3px;
+  border: 0;
+  background: transparent;
+  color: #f08a36;
+  font: inherit;
+  cursor: pointer;
+}
+
+.account-switch button:hover {
+  text-decoration: underline;
+}
+
+.illustration-panel {
+  width: min(100%, 810px);
+  justify-self: center;
+  display: grid;
+  place-items: center;
+}
+
+.shopping-art {
+  width: 100%;
+  height: auto;
+  max-height: 79vh;
+  overflow: visible;
+  filter: drop-shadow(0 11px 12px rgba(169, 75, 2, 0.08));
+}
+
+.signup-screen .shop-card {
+  width: min(100%, 470px);
+  max-width: 470px;
+  min-height: min(82vh, 760px);
+  padding: 38px 48px;
+  background: #ff8b1c;
+  box-shadow: 0 15px 42px rgba(156, 74, 4, 0.14);
+}
+
+.signup-screen {
+  grid-template-columns: minmax(360px, 0.42fr) minmax(0, 0.58fr);
+  justify-items: stretch;
+  background: #fff;
+}
+
+.signup-screen .illustration-panel {
+  display: grid;
+}
+
+.signup-screen .piqnora-logo {
+  margin-bottom: 23px;
+}
+
+.signup-screen .shop-card h1,
+.signup-screen .shop-label {
+  color: #fff;
+}
+
+.signup-screen .shop-intro {
+  margin-bottom: 19px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.signup-screen .shop-label {
+  margin-bottom: 14px;
+}
+
+.signup-screen .shop-label input {
+  background: #fff;
+}
+
+.signup-screen .shop-label input::placeholder {
+  color: #777;
+}
+
+.signup-screen .shop-submit {
+  margin-top: 5px;
+  background: #fff;
+  color: #e96f00;
+}
+
+.signup-screen .shop-submit:hover {
+  background: #fff4e9;
+}
+
+.signup-screen .account-switch {
+  color: #fff;
+}
+
+.signup-screen .account-switch button {
+  color: #5a2a00;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .shop-screen {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    padding: 22px 18px;
+    background: #ff8b1c;
+  }
+
+  .shop-card {
+    width: min(100%, 390px);
+    max-width: 390px;
+    min-height: 0;
+    display: block;
+    padding: 30px clamp(24px, 8vw, 42px) 27px;
+  }
+
+  .illustration-panel {
+    display: none;
+  }
+
+  .signup-screen .shop-card {
+    width: min(100%, 430px);
+    max-width: 430px;
+    min-height: 0;
+    padding: 28px 26px 26px;
+    background: #ff8b1c;
+    box-shadow: 0 12px 30px rgba(156, 74, 4, 0.14);
+  }
+
+  .signup-screen {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 20px;
+    background: #fff;
+  }
+
+  .signup-screen .illustration-panel {
+    display: grid;
+    width: min(100%, 430px);
+    min-height: 0;
+    margin: 0 auto;
+  }
+
+  .signup-screen .shopping-art {
+    width: 100%;
+    max-height: 32vh;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 380px) {
+  .shop-screen {
+    padding: 15px 13px;
+  }
+
+  .shop-card {
+    min-height: 0;
+    padding: 24px 24px 22px;
+  }
+
+  .piqnora-logo {
+    margin-bottom: 20px;
+  }
+
+  .shop-label {
+    margin-bottom: 12px;
+  }
+
+  .signup-screen .shop-card {
+    padding: 23px 21px;
+  }
+
+  .signup-screen .shopping-art {
+    max-height: 26vh;
+  }
+}
