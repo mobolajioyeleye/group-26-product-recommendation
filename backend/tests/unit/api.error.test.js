@@ -49,12 +49,12 @@ describe("Unit Tests: ApiError Utility & Validate Middleware", () => {
 
       validate(mockReq, mockRes, mockNext);
 
-      expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({
-        success: false,
-        message: "Price must be a positive number",
-      });
-      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockStatus).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWithError = mockNext.mock.calls[0][0];
+      expect(calledWithError).toBeInstanceOf(ApiError);
+      expect(calledWithError.statusCode).toBe(400);
+      expect(calledWithError.message).toBe("Price must be a positive number");
     });
 
     test("calls next() when validation has no errors", () => {
