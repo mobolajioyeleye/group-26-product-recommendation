@@ -198,6 +198,31 @@ runTest("errorHandler handles generic unhandled errors with 500 Internal Server 
   assert.strictEqual(res.body.message, "Internal server error");
 });
 
+runTest("authMiddleware calls next with ApiError.unauthorized when cookie missing", () => {
+  const { authenticate } = require("../src/middleware/authMiddleware");
+  let caughtError = null;
+  const mockReq = { cookies: {} };
+  authenticate(mockReq, {}, (err) => {
+    caughtError = err;
+  });
+  assert.ok(caughtError instanceof ApiError);
+  assert.strictEqual(caughtError.statusCode, 401);
+  assert.strictEqual(caughtError.message, "Authentication required");
+});
+
+runTest("roleMiddleware calls next with ApiError.forbidden when role is unauthorized", () => {
+  const { authorize } = require("../src/middleware/roleMiddleware");
+  let caughtError = null;
+  const mockReq = { user: { role: "User" } };
+  const middleware = authorize("Administrator");
+  middleware(mockReq, {}, (err) => {
+    caughtError = err;
+  });
+  assert.ok(caughtError instanceof ApiError);
+  assert.strictEqual(caughtError.statusCode, 403);
+  assert.strictEqual(caughtError.message, "You are not authorized to perform this action");
+});
+
 // -----------------------------------------------------------------------------
 // SECTION 3: Live HTTP Requests Against the Express Application
 // -----------------------------------------------------------------------------
@@ -290,6 +315,30 @@ async function runHttpTests() {
     assert.strictEqual(res.status, 404);
     assert.strictEqual(res.body.success, false);
     assert.match(res.body.message, /not found/i);
+  });
+
+  await runAsyncTest("GET /api/categories/:id with valid nonexistent UUID returns 404 Not Found via ApiError", async () => {
+    const res = await makeRequest({
+      path: "/api/categories/99999999-9999-4999-a999-999999999999",
+      method: "GET",
+    });
+    assert.strictEqual(res.status, 404);
+    assert.strictEqual(res.body.success, false);
+    assert.match(res.body.message, /Category not found/i);
+  });
+
+  await runAsyncTest("POST /users/register with missing fields triggers validate -> errorHandler (400)", async () => {
+    const res = await makeRequest(
+      {
+        path: "/users/register",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      },
+      JSON.stringify({})
+    );
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual(res.body.success, false);
+    assert.strictEqual(typeof res.body.message, "string");
   });
 
   server.close();

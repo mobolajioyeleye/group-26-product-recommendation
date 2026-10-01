@@ -10,8 +10,9 @@ const {
   deleteUser,
 } = require("../models/user.model");
 
-// Authentication
+// Authentication & Error utilities
 const { generateAccessToken } = require("../utils/auth");
+const ApiError = require("../utils/ApiError");
 
 // Create user
 const create = async (req, res, next) => {
@@ -19,17 +20,11 @@ const create = async (req, res, next) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, email and password are required",
-      });
+      return next(ApiError.badRequest("Name, email and password are required"));
     }
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists",
-      });
+      return next(ApiError.conflict("Email already exists"));
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -65,24 +60,15 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
+      return next(ApiError.badRequest("Email and password are required"));
     }
     const user = await findUserByEmail(email);
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return next(ApiError.unauthorized("Invalid email or password"));
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return next(ApiError.unauthorized("Invalid email or password"));
     }
     const token = generateAccessToken(user);
     res.cookie("accessToken", token, {
@@ -129,19 +115,15 @@ const getOne = async (req, res, next) => {
     const { id } = req.params;
 
     if (req.user.id !== id && req.user.role !== "Administrator") {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to view this user",
-      });
+      return next(
+        ApiError.forbidden("You are not authorized to view this user")
+      );
     }
 
     const user = await getUserById(id);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return next(ApiError.notFound("User not found"));
     }
 
     res.status(200).json({
@@ -160,19 +142,13 @@ const update = async (req, res, next) => {
     const { name, email, role } = req.body;
 
     if (!name || !email || !role) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, email and role are required",
-      });
+      return next(ApiError.badRequest("Name, email and role are required"));
     }
 
     const user = await updateUser(id, name, email, role);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return next(ApiError.notFound("User not found"));
     }
 
     res.status(200).json({
@@ -192,27 +168,20 @@ const updatePassword = async (req, res, next) => {
     const { password } = req.body;
 
     if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: "Password is required",
-      });
+      return next(ApiError.badRequest("Password is required"));
     }
     // Only the account owner or an Administrator can change the password
     if (req.user.id !== id && req.user.role !== "Administrator") {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to change this user's password",
-      });
+      return next(
+        ApiError.forbidden("You are not authorized to change this user's password")
+      );
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await updateUserPassword(id, hashedPassword);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return next(ApiError.notFound("User not found"));
     }
 
     res.status(200).json({
@@ -233,10 +202,7 @@ const remove = async (req, res, next) => {
     const user = await deleteUser(id);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return next(ApiError.notFound("User not found"));
     }
 
     res.status(200).json({
