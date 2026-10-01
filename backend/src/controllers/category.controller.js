@@ -1,15 +1,13 @@
 const categoryService = require("../services/category.service");
+const ApiError = require("../utils/ApiError");
 
 // Create category
-const createCategory = async (req, res) => {
+const createCategory = async (req, res, next) => {
   try {
     const { name, description } = req.body;
 
     if (!name || name.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Category name is required",
-      });
+      return next(ApiError.badRequest("Category name is required"));
     }
 
     const category = await categoryService.createCategory(
@@ -23,24 +21,15 @@ const createCategory = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.error("Create category error:", error);
-
     if (error.code === "23505") {
-      return res.status(409).json({
-        success: false,
-        message: "Category name already exists",
-      });
+      return next(ApiError.conflict("Category name already exists"));
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create category",
-    });
+    next(error);
   }
 };
 
 // Get all categories
-const getAllCategories = async (req, res) => {
+const getAllCategories = async (req, res, next) => {
   try {
     const categories = await categoryService.getAllCategories();
 
@@ -49,27 +38,19 @@ const getAllCategories = async (req, res) => {
       data: categories,
     });
   } catch (error) {
-    console.error("Get categories error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get categories",
-    });
+    next(error);
   }
 };
 
 // Get category by ID
-const getCategoryById = async (req, res) => {
+const getCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const category = await categoryService.getCategoryById(id);
 
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
+      return next(ApiError.notFound("Category not found"));
     }
 
     res.status(200).json({
@@ -77,26 +58,18 @@ const getCategoryById = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.error("Get category error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get category",
-    });
+    next(error);
   }
 };
 
 // Update category
-const updateCategory = async (req, res) => {
+const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
 
     if (!name || name.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Category name is required",
-      });
+      return next(ApiError.badRequest("Category name is required"));
     }
 
     const category = await categoryService.updateCategory(
@@ -106,10 +79,7 @@ const updateCategory = async (req, res) => {
     );
 
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
+      return next(ApiError.notFound("Category not found"));
     }
 
     res.status(200).json({
@@ -118,34 +88,22 @@ const updateCategory = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.error("Update category error:", error);
-
     if (error.code === "23505") {
-      return res.status(409).json({
-        success: false,
-        message: "Category name already exists",
-      });
+      return next(ApiError.conflict("Category name already exists"));
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update category",
-    });
+    next(error);
   }
 };
 
 // Delete category
-const deleteCategory = async (req, res) => {
+const deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const category = await categoryService.deleteCategory(id);
 
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
+      return next(ApiError.notFound("Category not found"));
     }
 
     res.status(200).json({
@@ -154,12 +112,7 @@ const deleteCategory = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.error("Delete category error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete category",
-    });
+    next(error);
   }
 };
 
