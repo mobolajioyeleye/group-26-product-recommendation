@@ -1,7 +1,8 @@
 const productService = require("../services/product.service");
+const ApiError = require("../utils/ApiError");
 
 // Create product
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   try {
     const {
       name,
@@ -13,31 +14,19 @@ const createProduct = async (req, res) => {
     } = req.body;
 
     if (!name || name.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Product name is required",
-      });
+      return next(ApiError.badRequest("Product name is required"));
     }
 
     if (price === undefined || Number(price) < 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Price must be 0 or greater",
-      });
+      return next(ApiError.badRequest("Price must be 0 or greater"));
     }
 
     if (!category_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Category ID is required",
-      });
+      return next(ApiError.badRequest("Category ID is required"));
     }
 
     if (stock !== undefined && Number(stock) < 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Stock must be 0 or greater",
-      });
+      return next(ApiError.badRequest("Stock must be 0 or greater"));
     }
 
     const product = await productService.createProduct(
@@ -55,24 +44,15 @@ const createProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Create product error:", error);
-
     if (error.code === "23503") {
-      return res.status(400).json({
-        success: false,
-        message: "Category not found",
-      });
+      return next(ApiError.badRequest("Category not found"));
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create product",
-    });
+    next(error);
   }
 };
 
 // Get all products
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
   try {
     const products = await productService.getAllProducts();
 
@@ -81,27 +61,19 @@ const getAllProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Get products error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get products",
-    });
+    next(error);
   }
 };
 
 // Get product by ID
-const getProductById = async (req, res) => {
+const getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const product = await productService.getProductById(id);
 
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
+      return next(ApiError.notFound("Product not found"));
     }
 
     res.status(200).json({
@@ -109,25 +81,17 @@ const getProductById = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Get product error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get product",
-    });
+    next(error);
   }
 };
 
 // Search products
-const searchProducts = async (req, res) => {
+const searchProducts = async (req, res, next) => {
   try {
     const { q } = req.query;
 
     if (!q || q.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Search term is required",
-      });
+      return next(ApiError.badRequest("Search term is required"));
     }
 
     const products = await productService.searchProducts(q.trim());
@@ -137,17 +101,12 @@ const searchProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Search products error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to search products",
-    });
+    next(error);
   }
 };
 
 // Get products by category
-const getProductsByCategory = async (req, res) => {
+const getProductsByCategory = async (req, res, next) => {
   try {
     const { categoryId } = req.params;
 
@@ -158,17 +117,12 @@ const getProductsByCategory = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Get products by category error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get products by category",
-    });
+    next(error);
   }
 };
 
 // Update product
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -182,31 +136,19 @@ const updateProduct = async (req, res) => {
     } = req.body;
 
     if (!name || name.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Product name is required",
-      });
+      return next(ApiError.badRequest("Product name is required"));
     }
 
     if (price === undefined || Number(price) < 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Price must be 0 or greater",
-      });
+      return next(ApiError.badRequest("Price must be 0 or greater"));
     }
 
     if (!category_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Category ID is required",
-      });
+      return next(ApiError.badRequest("Category ID is required"));
     }
 
     if (stock !== undefined && Number(stock) < 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Stock must be 0 or greater",
-      });
+      return next(ApiError.badRequest("Stock must be 0 or greater"));
     }
 
     const product = await productService.updateProduct(
@@ -220,10 +162,7 @@ const updateProduct = async (req, res) => {
     );
 
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
+      return next(ApiError.notFound("Product not found"));
     }
 
     res.status(200).json({
@@ -232,34 +171,22 @@ const updateProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Update product error:", error);
-
     if (error.code === "23503") {
-      return res.status(400).json({
-        success: false,
-        message: "Category not found",
-      });
+      return next(ApiError.badRequest("Category not found"));
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update product",
-    });
+    next(error);
   }
 };
 
 // Delete product
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const product = await productService.deleteProduct(id);
 
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
+      return next(ApiError.notFound("Product not found"));
     }
 
     res.status(200).json({
@@ -268,12 +195,7 @@ const deleteProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Delete product error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete product",
-    });
+    next(error);
   }
 };
 

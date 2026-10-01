@@ -1,14 +1,12 @@
 const { verifyAccessToken } = require("../utils/auth");
+const ApiError = require("../utils/ApiError");
 
 const authenticate = (req, res, next) => {
   try {
     const token = req.cookies.accessToken;
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
+      return next(ApiError.unauthorized("Authentication required"));
     }
 
     const decoded = verifyAccessToken(token);
@@ -17,12 +15,7 @@ const authenticate = (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Authentication error:", error.message);
-
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired token",
-    });
+    return next(ApiError.unauthorized("Invalid or expired token"));
   }
 };
 

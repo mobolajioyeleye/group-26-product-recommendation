@@ -10,6 +10,7 @@
     "test:validation": "jest tests/validation --runInBand",
     "test:contract": "jest tests/contract --runInBand",
     "test:coverage": "jest --coverage --runInBand --detectOpenHandles --forceExit",
+    "test:errors": "node scripts/test-error-handling.js",
     "dev": "nodemon src/server.js",
     "migrate": "dotenv run -f .env -- node-pg-migrate up -m ../database/migrations",
     "seed": "dotenv run -f .env -- node scripts/seed.js"
