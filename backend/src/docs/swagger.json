@@ -1,0 +1,2643 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Group 26 - Product Recommendation API",
+    "version": "1.0.0",
+    "description": "Interactive API Documentation and OpenAPI Specification for Group 26's Product Recommendation Web Application. Features activity tracking (views and favourites), deterministic activity-based recommendation engine, and user authentication.",
+    "contact": {
+      "name": "Group 26 Development Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Auto-detect Server (Current host: production or localhost)"
+    },
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Activities",
+      "description": "Task B6: Product view logging and user activity history APIs."
+    },
+    {
+      "name": "Favourites",
+      "description": "Task B6: Product favourites management and dual-persistence tracking."
+    },
+    {
+      "name": "Recommendations",
+      "description": "Task B7: Rule-based recommendation engine powered by weighted user engagement."
+    },
+    {
+      "name": "Authentication",
+      "description": "User registration, login, logout, and account profile management."
+    },
+    {
+      "name": "Products",
+      "description": "Task B5: Product catalog browsing, full-text search, category filtering, and administrative management."
+    },
+    {
+      "name": "Categories",
+      "description": "Task B5: Product taxonomy categories, category retrieval, and administrative management."
+    },
+    {
+      "name": "System",
+      "description": "Application health and monitoring endpoints."
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health check",
+        "description": "Returns the operational status of the Group 26 Express API server.",
+        "responses": {
+          "200": {
+            "description": "API is operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Group 26 API is running"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register a new user",
+        "description": "Creates a new user account with hashed password and default role 'User'.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "example": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "password": "Password123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "User created successfully",
+                  "user": {
+                    "id": "30000000-0000-0000-0000-000000000001",
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "role": "User",
+                    "created_at": "2026-09-28T12:00:00.000Z",
+                    "updated_at": "2026-09-28T12:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Name, email and password are required"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Email already exists"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User login",
+        "description": "Authenticates user credentials and issues an HTTP-only JWT `accessToken` cookie. Subsequent requests from Swagger UI in the browser will automatically include this cookie.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "john.doe@example.com",
+                "password": "Password123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful (sets accessToken cookie)",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "accessToken=jwt_token; HttpOnly; SameSite=Lax"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Login successful",
+                  "user": {
+                    "id": "30000000-0000-0000-0000-000000000001",
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "role": "User"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email and password required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Invalid email or password"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User logout",
+        "description": "Clears the HTTP-only `accessToken` session cookie.",
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Logout successful"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "List all users (Administrator only)",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Administrator role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get user profile by ID",
+        "description": "Retrieves profile details. Allowed for the account owner or an Administrator.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Not authorized to view this user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Update user profile (Administrator only)",
+        "description": "Updates a user's name, email, and role. Requires Administrator privileges.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Johnathan Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "johnathan.doe@example.com"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "User",
+                      "Administrator",
+                      "super_admin"
+                    ],
+                    "example": "User"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User updated successfully"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Name, email and role are required"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Delete user (Administrator only)",
+        "description": "Permanently deletes a user from the system. Requires Administrator role.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/activities/view": {
+      "post": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "Record a product view",
+        "description": "Task B6: Records a `VIEW` interaction for a product by the authenticated user. Validates product existence before logging. Repeated views accumulate distinct timestamps, signaling stronger category interest to the recommendation engine.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordViewRequest"
+              },
+              "example": {
+                "productId": "20000000-0000-0000-0000-000000000001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product view recorded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityCreatedResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Product view recorded successfully",
+                  "data": {
+                    "id": "40000000-0000-0000-0000-000000000001",
+                    "user_id": "30000000-0000-0000-0000-000000000001",
+                    "product_id": "20000000-0000-0000-0000-000000000001",
+                    "activity_type": "VIEW",
+                    "created_at": "2026-09-28T14:32:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Product ID is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product ID is required"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Authentication required"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activities": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "Retrieve user activity history",
+        "description": "Task B6: Fetches historical views and favourites for the authenticated user. Enforces strict user isolation. Enriches each record with product name, product image, and category ID.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Maximum number of activity records to return."
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "VIEW",
+                "FAVOURITE"
+              ]
+            },
+            "description": "Optional filter by activity type ('VIEW' or 'FAVOURITE')."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User activity list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserActivitiesResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": "40000000-0000-0000-0000-000000000001",
+                      "user_id": "30000000-0000-0000-0000-000000000001",
+                      "product_id": "20000000-0000-0000-0000-000000000001",
+                      "product_name": "iPhone 15 Pro Max",
+                      "product_image": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2015%20Pro%20Max/1.png",
+                      "category_id": "10000000-0000-0000-0000-000000000001",
+                      "activity_type": "VIEW",
+                      "created_at": "2026-09-28T14:32:00.000Z"
+                    }
+                  ],
+                  "meta": {
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/favourites": {
+      "post": {
+        "tags": [
+          "Favourites"
+        ],
+        "summary": "Add product to favourites",
+        "description": "Task B6: Adds a product to the user's favourites list. Validates product existence and rejects duplicate saves with HTTP 409 Conflict. Automatically logs a `FAVOURITE` event in the `activities` table for recommendation weighting (3x multiplier).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFavouriteRequest"
+              },
+              "example": {
+                "productId": "20000000-0000-0000-0000-000000000002"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product added to favourites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavouriteCreatedResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Product added to favourites",
+                  "data": {
+                    "id": "50000000-0000-0000-0000-000000000001",
+                    "user_id": "30000000-0000-0000-0000-000000000001",
+                    "product_id": "20000000-0000-0000-0000-000000000002",
+                    "created_at": "2026-09-28T14:35:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Product ID is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product not found"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product is already favourited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product is already in your favourites"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Favourites"
+        ],
+        "summary": "Retrieve user favourites",
+        "description": "Task B6: Retrieves the authenticated user's favourited products, enriched with complete product information (name, description, price, image URL, stock, category name) and the `favourited_at` timestamp.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Optional maximum number of favourites to return."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User favourites list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFavouritesResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "product_id": "20000000-0000-0000-0000-000000000002",
+                      "name": "Apple MacBook Pro 14 Inch",
+                      "description": "M3 Pro chip, 18GB Unified Memory, 512GB SSD Storage.",
+                      "price": "1999.99",
+                      "image_url": "https://cdn.dummyjson.com/products/images/laptops/Apple%20MacBook%20Pro%2014%20Inch/1.png",
+                      "stock": 14,
+                      "category_id": "10000000-0000-0000-0000-000000000001",
+                      "category_name": "Electronics",
+                      "favourited_at": "2026-09-28T14:35:00.000Z"
+                    }
+                  ],
+                  "meta": {
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/favourites/{productId}": {
+      "delete": {
+        "tags": [
+          "Favourites"
+        ],
+        "summary": "Remove product from favourites",
+        "description": "Task B6: Deletes a product from the user's favourites. Validates user ownership so users cannot delete other users' favourites. Preserves historical entries in the `activities` table so recommendation signals remain intact.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID of the product to unfavourite"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product removed from favourites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavouriteDeletedResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Product removed from favourites",
+                  "data": {
+                    "product_id": "20000000-0000-0000-0000-000000000002"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Favourite record not found or not owned by user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Favourite record not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommendations": {
+      "get": {
+        "tags": [
+          "Recommendations"
+        ],
+        "summary": "Get product recommendations",
+        "description": "Task B7: Returns activity-based product recommendations. Analyzes category affinity scores (views weighted 1x, favourites weighted 3x, repeated activity accumulated). Strictly excludes previously viewed and favourited products. Provides cold-start discovery items for new users and unauthenticated guests.",
+        "security": [
+          {},
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 8,
+              "minimum": 1,
+              "maximum": 20
+            },
+            "description": "Number of recommendations to return (default: 8, max: 20)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recommended products list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": "20000000-0000-0000-0000-000000000003",
+                      "name": "Sony WH-1000XM5 Wireless Headphones",
+                      "description": "Industry Leading noise canceling with Auto NC Optimizer.",
+                      "price": "399.99",
+                      "category_id": "10000000-0000-0000-0000-000000000001",
+                      "category_name": "Electronics",
+                      "image_url": "https://cdn.dummyjson.com/products/images/audio/Sony%20Headphones/1.png",
+                      "stock": 20,
+                      "recommendation_reason": "Based on your interest in Electronics"
+                    }
+                  ],
+                  "meta": {
+                    "total": 1,
+                    "count": 1,
+                    "personalized": true,
+                    "topCategories": [
+                      {
+                        "categoryId": "10000000-0000-0000-0000-000000000001",
+                        "categoryName": "Electronics",
+                        "score": 5
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "List all products",
+        "description": "Task B5: Retrieves all products in the catalog enriched with category details.",
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": "20000000-0000-0000-0000-000000000001",
+                      "name": "Apple iPhone 15 Pro",
+                      "description": "Titanium design with A17 Pro chip.",
+                      "price": "999.99",
+                      "category_id": "10000000-0000-0000-0000-000000000001",
+                      "category_name": "Electronics",
+                      "image_url": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2015%20Pro/1.png",
+                      "stock": 25,
+                      "created_at": "2026-09-28T10:00:00.000Z",
+                      "updated_at": "2026-09-28T10:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Create a new product (Administrator only)",
+        "description": "Task B5: Adds a new product to the catalog. Validates foreign key category existence. Requires Administrator role.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              },
+              "example": {
+                "name": "Wireless Charging Pad",
+                "description": "15W fast wireless Qi charger.",
+                "price": "29.99",
+                "category_id": "10000000-0000-0000-0000-000000000001",
+                "image_url": "https://example.com/charger.png",
+                "stock": 50
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Product created successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (missing required fields or category does not exist)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "List all categories",
+        "description": "Task B5: Retrieves all product categories ordered alphabetically by name.",
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": "10000000-0000-0000-0000-000000000001",
+                      "name": "Electronics",
+                      "description": "Gadgets, audio, and devices",
+                      "created_at": "2026-09-28T10:00:00.000Z"
+                    },
+                    {
+                      "id": "10000000-0000-0000-0000-000000000002",
+                      "name": "Footwear",
+                      "description": "Shoes and sneakers",
+                      "created_at": "2026-09-28T10:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Create a new category (Administrator only)",
+        "description": "Task B5: Creates a new product category. Requires Administrator privileges.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryRequest"
+              },
+              "example": {
+                "name": "Home & Kitchen",
+                "description": "Appliances and cookware"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category created successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Category"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (name is required)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category name is required"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Administrator role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Category name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category name already exists"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Get category by ID",
+        "description": "Task B5: Retrieves details of a specific category by its UUID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Category UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Category"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Update category (Administrator only)",
+        "description": "Task B5: Updates an existing category's name and description. Requires Administrator role.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Category UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryRequest"
+              },
+              "example": {
+                "name": "Home, Garden & Kitchen",
+                "description": "Updated description"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category updated successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Category"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category not found"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Category name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Delete category (Administrator only)",
+        "description": "Task B5: Deletes a category. Requires Administrator role.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Category UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category deleted successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Category"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/search": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Search products by keyword",
+        "description": "Task B5: Performs case-insensitive matching across product names and descriptions.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query string",
+            "example": "phone"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Search term is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Search term is required"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/category/{categoryId}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get products by category",
+        "description": "Task B5: Retrieves all products that belong to the specified category ID.",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Category UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products in category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get product by ID",
+        "description": "Task B5: Retrieves single product details by product UUID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Product UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Update product (Administrator only)",
+        "description": "Task B5: Updates an existing product catalog entry. Requires Administrator role.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Product UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Product updated successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Delete product (Administrator only)",
+        "description": "Task B5: Deletes a product from the catalog. Requires Administrator role.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Product UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Product deleted successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Administrator required"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        }
+      }
+    },
+    "/users/{id}/password": {
+      "patch": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Update user password",
+        "description": "Updates user account password. Allowed for account owner or an Administrator.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "NewSecurePassword123!"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Password updated successfully"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Password is required"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden - Unauthorized to change this password"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "HTTP-only cookie containing the JWT access token. Authenticate by executing `POST /users/login` directly in Swagger UI."
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token header (`Authorization: Bearer <token>`). Supported for recommendation and external API testing."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message description"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "BasicResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Group 26 API is running"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john.doe@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "Password123!"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john.doe@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "Password123!"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "User",
+              "Administrator",
+              "super_admin"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        }
+      },
+      "RecordViewRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the product being viewed",
+            "example": "20000000-0000-0000-0000-000000000001"
+          }
+        },
+        "required": [
+          "productId"
+        ]
+      },
+      "Activity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "activity_type": {
+            "type": "string",
+            "enum": [
+              "VIEW",
+              "FAVOURITE"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EnrichedActivity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "product_image": {
+            "type": "string",
+            "nullable": true
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "activity_type": {
+            "type": "string",
+            "enum": [
+              "VIEW",
+              "FAVOURITE"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ActivityCreatedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Product view recorded successfully"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Activity"
+          }
+        }
+      },
+      "UserActivitiesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrichedActivity"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 10
+              }
+            }
+          }
+        }
+      },
+      "AddFavouriteRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the product to add to favourites",
+            "example": "20000000-0000-0000-0000-000000000002"
+          }
+        },
+        "required": [
+          "productId"
+        ]
+      },
+      "Favourite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FavouriteCreatedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Product added to favourites"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Favourite"
+          }
+        }
+      },
+      "FavouriteDeletedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Product removed from favourites"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "product_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        }
+      },
+      "EnrichedFavourite": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string",
+            "example": "1999.99"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "stock": {
+            "type": "integer"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "favourited_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserFavouritesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrichedFavourite"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 3
+              }
+            }
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "stock": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecommendedProduct": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "stock": {
+            "type": "integer"
+          },
+          "recommendation_reason": {
+            "type": "string",
+            "example": "Based on your interest in Electronics"
+          }
+        }
+      },
+      "RecommendationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendedProduct"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 8
+              },
+              "count": {
+                "type": "integer",
+                "example": 8
+              },
+              "personalized": {
+                "type": "boolean",
+                "example": true
+              },
+              "reason": {
+                "type": "string",
+                "example": "unauthenticated_cold_start"
+              },
+              "topCategories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "categoryId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "categoryName": {
+                      "type": "string"
+                    },
+                    "score": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Electronics"
+          },
+          "description": {
+            "type": "string",
+            "example": "Smartphones, laptops, and audio gear"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Consumer Electronics"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated category description"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Logitech MX Master 3S Mouse"
+          },
+          "description": {
+            "type": "string",
+            "example": "Quiet clicks 8K DPI any-surface tracking wireless mouse."
+          },
+          "price": {
+            "type": "string",
+            "example": "99.99"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "10000000-0000-0000-0000-000000000001"
+          },
+          "image_url": {
+            "type": "string",
+            "example": "https://example.com/mouse.png"
+          },
+          "stock": {
+            "type": "integer",
+            "example": 35
+          }
+        },
+        "required": [
+          "name",
+          "price",
+          "category_id"
+        ]
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Logitech MX Master 3S Wireless Mouse (Graphite)"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated detailed description"
+          },
+          "price": {
+            "type": "string",
+            "example": "89.99"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "10000000-0000-0000-0000-000000000001"
+          },
+          "image_url": {
+            "type": "string",
+            "example": "https://example.com/mouse-updated.png"
+          },
+          "stock": {
+            "type": "integer",
+            "example": 40
+          }
+        },
+        "required": [
+          "name",
+          "price",
+          "category_id"
+        ]
+      }
+    }
+  }
+}
