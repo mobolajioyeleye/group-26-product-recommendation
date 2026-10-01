@@ -1,7 +1,7 @@
 const productService = require("../services/product.service");
 
 // Create product
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   try {
     const {
       name,
@@ -55,24 +55,18 @@ const createProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Create product error:", error);
-
     if (error.code === "23503") {
       return res.status(400).json({
         success: false,
         message: "Category not found",
       });
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create product",
-    });
+    next(error);
   }
 };
 
 // Get all products
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
   try {
     const products = await productService.getAllProducts();
 
@@ -81,17 +75,12 @@ const getAllProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Get products error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get products",
-    });
+    next(error);
   }
 };
 
 // Get product by ID
-const getProductById = async (req, res) => {
+const getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -109,17 +98,12 @@ const getProductById = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Get product error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get product",
-    });
+    next(error);
   }
 };
 
 // Search products
-const searchProducts = async (req, res) => {
+const searchProducts = async (req, res, next) => {
   try {
     const { q } = req.query;
 
@@ -137,17 +121,12 @@ const searchProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Search products error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to search products",
-    });
+    next(error);
   }
 };
 
 // Get products by category
-const getProductsByCategory = async (req, res) => {
+const getProductsByCategory = async (req, res, next) => {
   try {
     const { categoryId } = req.params;
 
@@ -158,17 +137,12 @@ const getProductsByCategory = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Get products by category error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get products by category",
-    });
+    next(error);
   }
 };
 
 // Update product
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -232,24 +206,18 @@ const updateProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Update product error:", error);
-
     if (error.code === "23503") {
       return res.status(400).json({
         success: false,
         message: "Category not found",
       });
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update product",
-    });
+    next(error);
   }
 };
 
 // Delete product
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -268,12 +236,7 @@ const deleteProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Delete product error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete product",
-    });
+    next(error);
   }
 };
 
