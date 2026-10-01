@@ -13,7 +13,7 @@ const paginationValidator = [
 ];
 
 const productQueryValidator = [
-  query("search")
+  query("q")
     .optional()
     .trim()
     .isLength({ min: 1, max: 100 })

@@ -1,4 +1,12 @@
-const { param } = require("express-validator");
+const { body, param } = require("express-validator");
+
+const addFavouriteValidator = [
+  body("productId")
+    .notEmpty()
+    .withMessage("Product ID is required")
+    .isUUID()
+    .withMessage("Must be a valid UUID"),
+];
 
 const userIdValidator = [
   param("userId")
@@ -23,6 +31,7 @@ const productIdFavouriteValidator = [
 ];
 
 module.exports = {
+  addFavouriteValidator,
   userIdValidator,
   productFavouriteValidator,
   productIdFavouriteValidator,

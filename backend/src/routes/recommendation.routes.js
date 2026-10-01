@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const recommendationController = require("../controllers/recommendation.controller");
 const { verifyAccessToken } = require("../utils/auth");
+const validate = require("../middleware/validate");
+const {
+  recommendationQueryValidator,
+} = require("../validators/recommendation.validator");
 
 /**
  * Optional authentication helper for recommendation engine.
@@ -30,8 +34,13 @@ const optionalAuthenticate = (req, res, next) => {
 };
 
 // GET /api/recommendations (supports authenticated user or guest cold start)
-router.get("/", optionalAuthenticate, recommendationController.getRecommendations);
+router.get(
+  "/",
+  recommendationQueryValidator,
+  validate,
+  optionalAuthenticate,
+  recommendationController.getRecommendations
+);
 
 module.exports = router;
-
 

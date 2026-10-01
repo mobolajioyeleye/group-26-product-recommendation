@@ -6,8 +6,8 @@ const createProductValidator = [
     .trim()
     .notEmpty()
     .withMessage("Product name is required")
-    .isLength({ min: 2, max: 150 })
-    .withMessage("Product name must be between 2 and 150 characters"),
+    .isLength({ min: 2, max: 255 })
+    .withMessage("Product name must be between 2 and 255 characters"),
 
   body("description")
     .optional()
@@ -34,8 +34,7 @@ const createProductValidator = [
     .withMessage("Image URL must be a valid URL"),
 
   body("stock")
-    .notEmpty()
-    .withMessage("Stock is required")
+    .optional()
     .isInt({ min: 0 })
     .withMessage("Stock must be a non-negative integer"),
 ];
@@ -51,8 +50,8 @@ const updateProductValidator = [
     .trim()
     .notEmpty()
     .withMessage("Product name is required")
-    .isLength({ min: 2, max: 150 })
-    .withMessage("Product name must be between 2 and 150 characters"),
+    .isLength({ min: 2, max: 255 })
+    .withMessage("Product name must be between 2 and 255 characters"),
 
   body("description")
     .optional()
@@ -79,8 +78,7 @@ const updateProductValidator = [
     .withMessage("Image URL must be a valid URL"),
 
   body("stock")
-    .notEmpty()
-    .withMessage("Stock is required")
+    .optional()
     .isInt({ min: 0 })
     .withMessage("Stock must be a non-negative integer"),
 ];
