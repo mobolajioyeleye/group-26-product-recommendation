@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../../src/app");
 const { generateAccessToken } = require("../../src/utils/auth");
+const jwt = require("jsonwebtoken");
 
 describe("Error Contract Tests: Standard Error Responses & HTTP Status Codes", () => {
   const nonExistentUuid = "99999999-9999-4999-a999-999999999999"; // RFC 4122 v4 compliant
@@ -52,7 +53,22 @@ describe("Error Contract Tests: Standard Error Responses & HTTP Status Codes", (
 
       expect(res.status).toBe(401);
       expect(res.body).toHaveProperty("success", false);
-      expect(res.body.message).toMatch(/invalid or expired token/i);
+      expect(res.body.message).toBe("Invalid authentication token");
+    });
+
+    test("returns 401 when accessing protected route with expired token", async () => {
+      const expiredToken = jwt.sign(
+        { id: "00000000-0000-4000-a000-000000000002" },
+        process.env.JWT_SECRET || "default_test_secret",
+        { expiresIn: "-1s" }
+      );
+      const res = await request(app)
+        .get("/api/activities")
+        .set("Cookie", [`accessToken=${expiredToken}`]);
+
+      expect(res.status).toBe(401);
+      expect(res.body).toHaveProperty("success", false);
+      expect(res.body.message).toBe("Authentication token has expired");
     });
   });
 
