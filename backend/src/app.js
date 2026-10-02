@@ -14,10 +14,15 @@ const recommendationRoutes = require("./routes/recommendation.routes");
 const app = express();
 
 // Common middleware
-app.use(cors());
+
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
