@@ -19,8 +19,8 @@ const updateUserValidator = [
   body("role")
     .notEmpty()
     .withMessage("Role is required")
-    .isIn(["User", "Administrator", "super_admin"])
-    .withMessage("Role must be User, Administrator or super_admin"),
+    .isIn(["User", "Administrator"])
+    .withMessage("Role must be User or Administrator"),
 ];
 
 const updatePasswordValidator = [
