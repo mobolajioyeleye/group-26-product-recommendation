@@ -62,11 +62,29 @@ export const addFavourite = async (productId) => {
     return { product_id: productId, offline: true };
   }
 
-  const response = await apiRequest("/api/favourites", {
-    method: "POST",
-    body: JSON.stringify({ productId: targetId }),
-  });
-  return response?.data;
+  try {
+    const response = await apiRequest("/api/favourites", {
+      method: "POST",
+      body: JSON.stringify({ productId: targetId }),
+    });
+    return response?.data;
+  } catch (error) {
+    // If backend rejects prototype/seed mock UUID format or product is not in database yet,
+    // gracefully retain favorite locally without showing an error to the user
+    if (
+      error?.message?.toLowerCase().includes("uuid") ||
+      error?.message?.toLowerCase().includes("not found") ||
+      error?.response?.status === 400 ||
+      error?.response?.status === 404
+    ) {
+      console.warn(
+        `[Favourites] Backend sync fallback for ${targetId}:`,
+        error.message
+      );
+      return { product_id: productId, offline: true };
+    }
+    throw error;
+  }
 };
 
 /**
@@ -80,8 +98,27 @@ export const removeFavourite = async (productId) => {
     return { product_id: productId, offline: true };
   }
 
-  const response = await apiRequest(`/api/favourites/${targetId}`, {
-    method: "DELETE",
-  });
-  return response?.data;
+  try {
+    const response = await apiRequest(`/api/favourites/${targetId}`, {
+      method: "DELETE",
+    });
+    return response?.data;
+  } catch (error) {
+    // If backend rejects non-standard ID or favourite is not found on backend,
+    // gracefully succeed locally
+    if (
+      error?.message?.toLowerCase().includes("uuid") ||
+      error?.message?.toLowerCase().includes("not found") ||
+      error?.response?.status === 400 ||
+      error?.response?.status === 404
+    ) {
+      console.warn(
+        `[Favourites] Backend remove fallback for ${targetId}:`,
+        error.message
+      );
+      return { product_id: productId, offline: true };
+    }
+    throw error;
+  }
 };
+
