@@ -253,7 +253,7 @@ function App() {
       <AuthPage
         key={authView}
         initialView={authView}
-        onSuccess={(loggedInUser) => {
+        onSuccess={async (loggedInUser) => {
           setFavorites(readFavorites(loggedInUser));
           setPage(pendingPage);
           setNotice(
@@ -263,8 +263,25 @@ function App() {
             top: 0,
             behavior: "smooth",
           });
+          try {
+            const liveData = await getFavourites();
+            if (Array.isArray(liveData)) {
+              const backendIds = liveData.flatMap((item) => {
+                const rawId = item.product_id || item.productId || item.id;
+                const slug = UUID_TO_SLUG[rawId];
+                return slug ? [rawId, slug] : [rawId];
+              });
+              const cached = readFavorites(loggedInUser) || [];
+              const merged = Array.from(new Set([...cached, ...backendIds]));
+              setFavorites(merged);
+              writeFavorites(loggedInUser, merged);
+            }
+          } catch (e) {
+            console.warn("[Favourites] Login sync fallback:", e.message);
+          }
         }}
       />
+
     );
   }
 
