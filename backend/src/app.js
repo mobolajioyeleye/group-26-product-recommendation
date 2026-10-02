@@ -14,6 +14,7 @@ const productRoutes = require("./routes/product.routes");
 const activityRoutes = require("./routes/activity.routes");
 const favouriteRoutes = require("./routes/favourite.routes");
 const recommendationRoutes = require("./routes/recommendation.routes");
+const { router: swaggerRouter } = require("./docs/swagger");
 
 // Validate critical secrets/environment variables at initialization
 validateEnv();
@@ -71,6 +72,9 @@ app.use("/api/favourites", favouriteRoutes);
 
 // B7 - Recommendation routes
 app.use("/api/recommendations", recommendationRoutes);
+
+// B10 - Swagger documentation & OpenAPI JSON specification
+app.use(swaggerRouter);
 
 // B8 - Error handling middleware
 // Keep these after all API routes
