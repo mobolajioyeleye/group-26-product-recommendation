@@ -223,7 +223,7 @@ A dedicated security verification suite was implemented in `backend/scripts/test
   ✅ [PASS] Oversized request body is rejected to prevent payload flooding (DoS)
 
 --- 7. Testing Rate Limiting (Brute-Force Attack Defense) ---
-  ✅ [PASS] Rate limiter middleware is active and enforces 429 when threshold exceeded
+  ✅ [PASS] Rate limiter middleware (authLimiter) is active on /users/login and enforces 429 when threshold exceeded
 
 =======================================================
    TASK B9 SECURITY SUMMARY: 19/19 TESTS PASSED (100%)

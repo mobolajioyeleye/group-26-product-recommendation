@@ -323,45 +323,25 @@ async function runSecurityTests() {
   // -----------------------------------------------------------------------------
   console.log("\n--- 7. Testing Rate Limiting (Brute-Force Attack Defense) ---");
 
-  await runAsyncTest("Rate limiter middleware is active and enforces 429 when threshold exceeded", async () => {
-    const rateLimit = require("express-rate-limit");
-    const express = require("express");
-    const testApp = express();
-    const limiter = rateLimit({
-      windowMs: 1000,
-      max: 2,
-      standardHeaders: true,
-      legacyHeaders: false,
-      handler: (req, res, next) => next(new ApiError(429, "Too many authentication attempts")),
-    });
-    testApp.post("/login-test", limiter, (req, res) => res.json({ ok: true }));
-    testApp.use(require("../src/middleware/errorHandler"));
-
-    const testServer = http.createServer(testApp);
-    await new Promise((resolve) => testServer.listen(0, resolve));
-    const testPort = testServer.address().port;
-
-    async function hitLogin() {
-      return new Promise((resolve) => {
-        http.request({ port: testPort, hostname: "127.0.0.1", path: "/login-test", method: "POST" }, (res) => {
-          let data = "";
-          res.on("data", (c) => (data += c));
-          res.on("end", () => resolve({ status: res.statusCode, body: JSON.parse(data) }));
-        }).end();
-      });
+  await runAsyncTest("Rate limiter middleware (authLimiter) is active on /users/login and enforces 429 when threshold exceeded", async () => {
+    let lastRes;
+    for (let i = 0; i < 15; i++) {
+      lastRes = await makeRequest(
+        {
+          path: "/users/login",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+        JSON.stringify({ email: "rate-limit-test@group26.com", password: "Password123!" })
+      );
+      if (lastRes.status === 429) {
+        break;
+      }
     }
 
-    const res1 = await hitLogin();
-    const res2 = await hitLogin();
-    const res3 = await hitLogin(); // 3rd request must trigger 429
-
-    assert.strictEqual(res1.status, 200);
-    assert.strictEqual(res2.status, 200);
-    assert.strictEqual(res3.status, 429);
-    assert.strictEqual(res3.body.success, false);
-    assert.strictEqual(res3.body.message, "Too many authentication attempts");
-
-    testServer.close();
+    assert.strictEqual(lastRes.status, 429, "Expected 429 Too Many Requests from authLimiter on /users/login");
+    assert.strictEqual(lastRes.body.success, false);
+    assert.strictEqual(lastRes.body.message, "Too many authentication attempts, please try again after 15 minutes");
   });
 
   server.close();
