@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
-import products from "./data/products";
-import {
-  readCatalog,
-  readFavorites,
-  writeCatalog,
-  writeFavorites,
-} from "./data/catalogStorage";
-import { categories as defaultCategories } from "./data/products";
+import { readFavorites } from "./data/catalogStorage";
+import { getProducts, getCategories } from "../services/api";
+import { normalizeProducts } from "./data/productAdapter";
 import AuthPage from "./components/AuthPage";
 import { StoreShell } from "./components/StoreShell";
 import AdminApp from "./admin/AdminApp";
@@ -27,14 +22,13 @@ import {
 
 function App() {
   const { user, isAuthenticated, logout } = useAuth();
-const currentUser = user;
+  const currentUser = user;
 
-    const [catalogProducts, setCatalogProducts] = useState(() =>
-    readCatalog(products, defaultCategories).products
-  );
-  const [categories, setCategories] = useState(() =>
-    readCatalog(products, defaultCategories).categories
-  );
+  // Real backend product/category data
+  const [catalogProducts, setCatalogProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
 
   // Restore the correct starting page after a browser refresh.
   const [page, setPage] = useState(() =>
@@ -45,42 +39,62 @@ const currentUser = user;
   const [pendingPage, setPendingPage] = useState("home");
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(
-    () => readCatalog(products, defaultCategories).products[0]
-  );
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Keep prototype favourites behavior for now.
+  // F6 will replace this with the real favourites API.
   const [favorites, setFavorites] = useState(() =>
     user ? readFavorites(user) : []
   );
+
   const [notice, setNotice] = useState("");
+
+  // Load products and categories from the real backend.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCatalog() {
+      setProductsLoading(true);
+      setProductsError("");
+
+      try {
+        const [backendProducts, backendCategories] = await Promise.all([
+          getProducts(),
+          getCategories(),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setCatalogProducts(
+          normalizeProducts(backendProducts, backendCategories)
+        );
+
+        setCategories(backendCategories);
+      } catch (error) {
+        if (!cancelled) {
+          setProductsError(
+            error.message || "Unable to load products right now."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setProductsLoading(false);
+        }
+      }
+    }
+
+    loadCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const adminRouteRequested =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("view") === "admin";
-
-  // Keep the temporary local catalog behavior for the design prototype.
-  useEffect(() => {
-    if (!adminRouteRequested) {
-      writeCatalog(catalogProducts, categories);
-    }
-  }, [adminRouteRequested, catalogProducts, categories]);
-
-  useEffect(() => {
-    function refreshCatalog(event) {
-      if (event.key !== "piqnora-catalog-v1") {
-        return;
-      }
-
-      const catalog = readCatalog(products, defaultCategories);
-      setCatalogProducts(catalog.products);
-      setCategories(catalog.categories);
-    }
-
-    window.addEventListener("storage", refreshCatalog);
-
-    return () => {
-      window.removeEventListener("storage", refreshCatalog);
-    };
-  }, []);
 
   // Sync favourites with the live backend when authenticated
   useEffect(() => {
@@ -121,7 +135,6 @@ const currentUser = user;
       isMounted = false;
     };
   }, [currentUser]);
-
 
   const storefrontCategories = Array.from(
     new Set([
@@ -267,80 +280,111 @@ const currentUser = user;
 
   let content;
 
-  switch (page) {
-    case "welcome":
-      content = (
-        <WelcomePage
-          categories={storefrontCategories}
-          onNavigate={navigate}
-          onCategory={(category) =>
-            navigate("search", category)
-          }
-        />
-      );
-      break;
+  // Show backend loading state for product pages.
+  if (productsLoading && page !== "welcome") {
+    content = (
+      <div className="page-content">
+        <div className="empty-state">
+          <span>⌛</span>
+          <h3>Loading products...</h3>
+          <p>We're getting the latest products for you.</p>
+        </div>
+      </div>
+    );
+  } else if (productsError && page !== "welcome") {
+    content = (
+      <div className="page-content">
+        <div className="empty-state">
+          <span>⚠️</span>
+          <h3>Unable to load products</h3>
+          <p>{productsError}</p>
+        </div>
+      </div>
+    );
+  } else {
+    switch (page) {
+      case "welcome":
+        content = (
+          <WelcomePage
+            categories={storefrontCategories}
+            onNavigate={navigate}
+            onCategory={(category) =>
+              navigate("search", category)
+            }
+          />
+        );
+        break;
 
-    case "home":
-      content = (
-        <DiscoverPage
-          {...sharedProps}
-          onCategory={(category) =>
-            navigate("search", category)
-          }
-        />
-      );
-      break;
+      case "home":
+        content = (
+          <DiscoverPage
+            {...sharedProps}
+            onCategory={(category) =>
+              navigate("search", category)
+            }
+          />
+        );
+        break;
 
-    case "search":
-      content = (
-        <SearchPage
-          key={selectedCategory}
-          {...sharedProps}
-          searchValue={searchValue}
-          initialCategory={selectedCategory}
-          onSearch={setSearchValue}
-        />
-      );
-      break;
+      case "search":
+        content = (
+          <SearchPage
+            key={selectedCategory}
+            {...sharedProps}
+            searchValue={searchValue}
+            initialCategory={selectedCategory}
+            onSearch={setSearchValue}
+          />
+        );
+        break;
 
-    case "detail":
-      content = (
-        <ProductDetailsPage
-          key={selectedProduct.id}
-          {...sharedProps}
-          product={selectedProduct}
-          onBack={() => navigate("home")}
-        />
-      );
-      break;
+      case "detail":
+        content = selectedProduct ? (
+          <ProductDetailsPage
+            key={selectedProduct.id}
+            {...sharedProps}
+            product={selectedProduct}
+            onBack={() => navigate("home")}
+          />
+        ) : (
+          <div className="page-content">
+            <div className="empty-state">
+              <span>🔍</span>
+              <h3>Product not found</h3>
+              <p>The selected product is no longer available.</p>
+            </div>
+          </div>
+        );
+        break;
 
-    case "favorites":
-      content = <FavoritesPage {...sharedProps} />;
-      break;
+      case "favorites":
+        content = <FavoritesPage {...sharedProps} />;
+        break;
 
-    case "recommended":
-      content = <RecommendedPage {...sharedProps} />;
-      break;
+      case "recommended":
+        content = <RecommendedPage {...sharedProps} />;
+        break;
 
-    case "profile":
-      content = (
-        <ProfilePage
-          user={currentUser}
-          onNavigate={navigate}
-        />
-      );
-      break;
+      case "profile":
+        content = (
+          <ProfilePage
+            user={currentUser}
+            onNavigate={navigate}
+          />
+        );
+        break;
 
-    default:
-      content = (
-        <WelcomePage
-          categories={storefrontCategories}
-          onNavigate={navigate}
-          onCategory={(category) =>
-            navigate("search", category)
-          }
-        />
-      );
+      default:
+        content = (
+          <WelcomePage
+            categories={storefrontCategories}
+            onNavigate={navigate}
+            onCategory={(category) =>
+              navigate("search", category)
+            }
+          />
+        );
+    }
   }
 
   const shellPage = page === "detail" ? "home" : page;
