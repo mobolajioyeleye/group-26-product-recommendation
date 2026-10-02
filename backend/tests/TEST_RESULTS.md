@@ -26,7 +26,25 @@
 ## 2. Test Suite Breakdown
 
 ### A. Unit Tests (`backend/tests/unit/`)
-*Total: 3 Suites, 17 Tests*
+*Total: 2 Suites, 9 Tests*
+
+1. **`auth.utils.test.js` (5 tests)**
+   - `Scenario 1: generateAccessToken returns a valid non-empty JWT string` (7 ms) — **PASS**
+   - `Scenario 2: verifyAccessToken successfully decodes valid token payload claims` (2 ms) — **PASS**
+   - `Scenario 3: verifyAccessToken throws JsonWebTokenError for malformed token` (7 ms) — **PASS**
+   - `Scenario 4: verifyAccessToken throws JsonWebTokenError for token signed with wrong secret` (1 ms) — **PASS**
+   - `Scenario 5: verifyAccessToken throws TokenExpiredError for expired token` (1 ms) — **PASS**
+
+2. **`api.error.test.js` (4 tests)**
+   - `ApiError class instantiates correctly with status code and message` (5 ms) — **PASS**
+   - `ApiError class attaches custom sub-errors array when provided` (1 ms) — **PASS**
+   - `validate middleware returns 400 Bad Request with first error message when errors are present` (1 ms) — **PASS**
+   - `validate middleware calls next() when validation has no errors` (1 ms) — **PASS**
+
+---
+
+### B. Integration / Endpoint Tests (`backend/tests/integration/`)
+*Total: 8 Suites, 43 Tests*
 
 1. **`recommendation.service.test.js` (8 tests)**
    - `Scenario 1: Unauthenticated Guest Cold Start` (254 ms) — **PASS**
@@ -38,28 +56,10 @@
    - `Scenario 7: Fallback on Preferred Category Exhaustion Backfills Unseen Products` (2001 ms) — **PASS**
    - `Scenario 8: Complete Catalog Exhaustion Returns Empty Array` (5895 ms) — **PASS**
 
-2. **`auth.utils.test.js` (5 tests)**
-   - `Scenario 1: generateAccessToken returns a valid non-empty JWT string` (7 ms) — **PASS**
-   - `Scenario 2: verifyAccessToken successfully decodes valid token payload claims` (2 ms) — **PASS**
-   - `Scenario 3: verifyAccessToken throws JsonWebTokenError for malformed token` (7 ms) — **PASS**
-   - `Scenario 4: verifyAccessToken throws JsonWebTokenError for token signed with wrong secret` (1 ms) — **PASS**
-   - `Scenario 5: verifyAccessToken throws TokenExpiredError for expired token` (1 ms) — **PASS**
-
-3. **`api.error.test.js` (4 tests)**
-   - `ApiError class instantiates correctly with status code and message` (5 ms) — **PASS**
-   - `ApiError class attaches custom sub-errors array when provided` (1 ms) — **PASS**
-   - `validate middleware returns 400 Bad Request with first error message when errors are present` (1 ms) — **PASS**
-   - `validate middleware calls next() when validation has no errors` (1 ms) — **PASS**
-
----
-
-### B. Integration / Endpoint Tests (`backend/tests/integration/`)
-*Total: 7 Suites, 35 Tests*
-
-1. **`health.endpoints.test.js` (1 test)**
+2. **`health.endpoints.test.js` (1 test)**
    - `GET /api/health returns 200 OK with success confirmation` (36 ms) — **PASS**
 
-2. **`auth.endpoints.test.js` (8 tests)**
+3. **`auth.endpoints.test.js` (8 tests)**
    - `1. POST /users/register successfully creates a new account (201 Created)` (1385 ms) — **PASS**
    - `2. POST /users/register rejects duplicate email with 409 Conflict` (138 ms) — **PASS**
    - `3. POST /users/login rejects incorrect password with 401 Unauthorized` (223 ms) — **PASS**
@@ -69,7 +69,7 @@
    - `7. POST /users/logout clears authentication cookie (200 OK)` (4 ms) — **PASS**
    - `8. DELETE /users/:id allows Administrator to remove account (200 OK)` (136 ms) — **PASS**
 
-3. **`categories.endpoints.test.js` (6 tests)**
+4. **`categories.endpoints.test.js` (6 tests)**
    - `1. GET /api/categories returns all categories without authentication (200 OK)` (739 ms) — **PASS**
    - `2. POST /api/categories requires authentication (401 Unauthorized without token)` (17 ms) — **PASS**
    - `3. POST /api/categories allows Administrator to create category (201 Created)` (165 ms) — **PASS**
@@ -77,7 +77,7 @@
    - `5. PUT /api/categories/:id allows Administrator to update category (200 OK)` (162 ms) — **PASS**
    - `6. DELETE /api/categories/:id allows Administrator to delete category (200 OK)` (320 ms) — **PASS**
 
-4. **`products.endpoints.test.js` (7 tests)**
+5. **`products.endpoints.test.js` (7 tests)**
    - `1. GET /api/products returns product listing (200 OK)` (289 ms) — **PASS**
    - `2. GET /api/products/search?q=a returns matching products (200 OK)` (140 ms) — **PASS**
    - `3. GET /api/products/category/:categoryId returns category products (200 OK)` (133 ms) — **PASS**
@@ -86,13 +86,13 @@
    - `6. PUT /api/products/:id updates the product (200 OK)` (140 ms) — **PASS**
    - `7. DELETE /api/products/:id deletes the product (200 OK)` (265 ms) — **PASS**
 
-5. **`activities.endpoints.test.js` (4 tests)**
+6. **`activities.endpoints.test.js` (4 tests)**
    - `1. POST /api/activities/view requires authentication (401 Unauthorized)` (50 ms) — **PASS**
    - `2. POST /api/activities/view records a view activity for authenticated user (201 Created)` (306 ms) — **PASS**
    - `3. GET /api/activities retrieves authenticated user's activity stream (200 OK)` (310 ms) — **PASS**
    - `4. GET /api/activities rejects unauthenticated requests (401 Unauthorized)` (11 ms) — **PASS**
 
-6. **`favourites.endpoints.test.js` (6 tests)**
+7. **`favourites.endpoints.test.js` (6 tests)**
    - `1. POST /api/favourites requires authentication (401 Unauthorized)` (39 ms) — **PASS**
    - `2. POST /api/favourites adds a product to user favourites (201 Created)` (540 ms) — **PASS**
    - `3. POST /api/favourites rejects duplicate favourite with 409 Conflict` (277 ms) — **PASS**
@@ -100,7 +100,7 @@
    - `5. DELETE /api/favourites/:productId removes favourite successfully (200 OK)` (277 ms) — **PASS**
    - `6. DELETE /api/favourites/:productId on non-favourited product returns 404 Not Found` (145 ms) — **PASS**
 
-7. **`recommendations.endpoints.test.js` (3 tests)**
+8. **`recommendations.endpoints.test.js` (3 tests)**
    - `1. GET /api/recommendations returns cold start fallback for guest (200 OK)` (451 ms) — **PASS**
    - `2. GET /api/recommendations returns personalized recommendations for active user (200 OK)` (1213 ms) — **PASS**
    - `3. GET /api/recommendations rejects invalid limit > 20 with 400 Bad Request` (12 ms) — **PASS**

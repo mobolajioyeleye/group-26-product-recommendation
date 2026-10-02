@@ -51,11 +51,11 @@ All test assets are structured cleanly within `backend/tests/`:
 backend/tests/
 ├── setup.js                               # Global Jest environment & pool teardown
 ├── TEST_RESULTS.md                        # Automated run execution logs
-├── unit/                                  # Pure unit tests (isolated business logic)
-│   ├── recommendation.service.test.js     # 8 scoring, ranking & cold-start scenarios
+├── unit/                                  # Pure unit tests (in-memory business logic)
 │   ├── auth.utils.test.js                 # 5 JWT signing, claim & expiry scenarios
 │   └── api.error.test.js                  # 4 ApiError & validation middleware scenarios
 ├── integration/                           # Supertest + live Supabase PostgreSQL
+│   ├── recommendation.service.test.js     # 8 database-backed scoring, ranking & cold-start scenarios
 │   ├── health.endpoints.test.js           # GET /api/health
 │   ├── auth.endpoints.test.js             # User registration, login, profile, password, delete
 │   ├── categories.endpoints.test.js       # Category listing & Administrator CRUD
@@ -74,16 +74,7 @@ backend/tests/
 
 ## 3. Test Suite Inventory & Coverage Details
 
-### 3.1 Unit Testing Suite (17 Tests)
-- **Recommendation Engine Scoring (`recommendation.service.test.js` - 8 Tests):**
-  1. *Unauthenticated Guest Cold Start:* Verifies fallback to catalog-level popularity ranking with `meta.personalized = false`.
-  2. *New User Cold Start:* Verifies cold start behavior for newly registered users with zero recorded activity.
-  3. *Single-Category Preference:* Verifies view events calculate correct weight (1 pt/view) and rank preferred categories highest.
-  4. *Favourite Weighting Dominance:* Proves 1 favourite (3 pts) strictly outweighs 2 views (2 pts), placing the favourited category first.
-  5. *Repeated Interaction Accumulation:* Verifies multiple interactions accumulate points linearly.
-  6. *Strict Exclusion Filter:* Proves viewed or favourited products are strictly excluded from recommendation outputs.
-  7. *Category Exhaustion Backfill:* Proves that when preferred categories are exhausted, the engine safely backfills from unseen products across secondary categories.
-  8. *Complete Catalog Exhaustion:* Verifies empty array handling when a user has consumed all products in the database.
+### 3.1 Pure Unit Testing Suite (9 Tests)
 - **Auth Utilities (`auth.utils.test.js` - 5 Tests):**
   1. Token generation produces valid three-part JWT strings.
   2. Decoded payload claims preserve user ID, email, role, and expiration timestamps.
@@ -93,10 +84,19 @@ backend/tests/
 - **ApiError & Validate Middleware (`api.error.test.js` - 4 Tests):**
   1. `ApiError` class properly attaches HTTP status codes, messages, and operational flags.
   2. Optional sub-error array attachment for field-level validation errors.
-  3. `validate` middleware halts execution and returns 400 with first validation error message.
+  3. `validate` middleware halts execution and passes `ApiError.badRequest()` to error handler.
   4. `validate` middleware seamlessly passes control to `next()` when no errors are found.
 
-### 3.2 Integration & Endpoint Suite (35 Tests)
+### 3.2 Database-Backed Integration Suite (43 Tests)
+- **Recommendation Engine Scoring (`recommendation.service.test.js` - 8 Tests):**
+  1. *Unauthenticated Guest Cold Start:* Verifies fallback to catalog-level popularity ranking with `meta.personalized = false`.
+  2. *New User Cold Start:* Verifies cold start behavior for newly registered users with zero recorded activity.
+  3. *Single-Category Preference:* Verifies view events calculate correct weight (1 pt/view) and rank preferred categories highest.
+  4. *Favourite Weighting Dominance:* Proves 1 favourite (3 pts) strictly outweighs 2 views (2 pts), placing the favourited category first.
+  5. *Repeated Interaction Accumulation:* Verifies multiple interactions accumulate points linearly.
+  6. *Strict Exclusion Filter:* Proves viewed or favourited products are strictly excluded from recommendation outputs.
+  7. *Category Exhaustion Backfill:* Proves that when preferred categories are exhausted, the engine safely backfills from unseen products across secondary categories.
+  8. *Complete Catalog Exhaustion:* Verifies empty array handling when a user has consumed all products in the database.
 - **Health Check (`health.endpoints.test.js` - 1 Test):** Verifies `GET /api/health` returns status 200 with service confirmation.
 - **Auth & User Management (`auth.endpoints.test.js` - 8 Tests):** Verifies registration (201), duplicate prevention (409), login credential checking (401), secure HttpOnly cookie issuance (200), user profile retrieval (200), password updates (200), logout cookie clearing (200), and administrative deletion (200).
 - **Categories Endpoints (`categories.endpoints.test.js` - 6 Tests):** Public category listing (200), unauthenticated mutation prevention (401), administrator category creation (201), category detail retrieval (200), administrator updates (200), and deletion (200).
