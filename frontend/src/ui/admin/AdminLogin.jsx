@@ -1,27 +1,52 @@
-import { useState } from 'react'
+import { useState } from "react";
+import { useAuth } from "../../context/useAuth";
 
-export function AdminLogin({ onLogin }) {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
+export function AdminLogin() {
+  const { login, logout } = useAuth();
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(event) {
-    const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: value }))
+    const { name, value } = event.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault()
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
 
     if (!form.email || !form.password) {
-      setError('Please enter your admin email and password.')
-      return
+      setError("Please enter your admin email and password.");
+      return;
     }
 
-    onLogin({
-      name: 'Piqnora Admin',
-      email: form.email,
-      role: 'store manager'
-    })
+    setLoading(true);
+
+    try {
+      const data = await login(form.email, form.password);
+
+      if (data?.user?.role !== "Administrator") {
+        await logout();
+        setError("You are not authorized to access the admin dashboard.");
+      }
+    } catch (requestError) {
+      setError(
+        requestError.message ||
+          "Unable to sign in. Please check your credentials."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -35,7 +60,10 @@ export function AdminLogin({ onLogin }) {
         <div className="admin-intro">
           <p className="admin-kicker">ADMIN ACCESS</p>
           <h1>Welcome back.</h1>
-          <p>Manage products, categories, and the growth of your storefront in one place.</p>
+          <p>
+            Manage products, categories, and the growth of your storefront in
+            one place.
+          </p>
         </div>
 
         <form className="admin-login-form" onSubmit={handleSubmit}>
@@ -47,6 +75,7 @@ export function AdminLogin({ onLogin }) {
               value={form.email}
               onChange={handleChange}
               placeholder="admin@piqnora.com"
+              disabled={loading}
             />
           </label>
 
@@ -58,14 +87,21 @@ export function AdminLogin({ onLogin }) {
               value={form.password}
               onChange={handleChange}
               placeholder="Enter password"
+              disabled={loading}
             />
           </label>
 
           {error && <p className="admin-error">{error}</p>}
 
-          <button type="submit" className="admin-primary-button">Sign in</button>
+          <button
+            type="submit"
+            className="admin-primary-button"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Sign in"}
+          </button>
         </form>
       </section>
     </main>
-  )
+  );
 }
