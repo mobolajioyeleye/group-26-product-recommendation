@@ -1,6 +1,11 @@
 const request = require("supertest");
+const express = require("express");
 const app = require("../../src/app");
 const { generateAccessToken } = require("../../src/utils/auth");
+const { registerValidator } = require("../../src/validators/auth.validator");
+const { createProductValidator } = require("../../src/validators/product.validator");
+const validate = require("../../src/middleware/validate");
+const errorHandler = require("../../src/middleware/errorHandler");
 
 describe("Validation Tests: Request Input & Boundary Validation", () => {
   let adminCookie;
@@ -184,6 +189,56 @@ describe("Validation Tests: Request Input & Boundary Validation", () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toMatch(/between 1 and 20/i);
+    });
+  });
+
+  describe("B4 Validation Middleware Halts Before Controller", () => {
+    let testApp;
+    let mockController;
+
+    beforeEach(() => {
+      mockController = jest.fn((req, res) =>
+        res.status(200).json({ success: true, message: "Controller reached" })
+      );
+      testApp = express();
+      testApp.use(express.json());
+      testApp.post("/test-register", registerValidator, validate, mockController);
+      testApp.post("/test-product", createProductValidator, validate, mockController);
+      testApp.use(errorHandler);
+    });
+
+    test("B4 validation middleware rejects invalid registration and halts before controller is called", async () => {
+      const res = await request(testApp)
+        .post("/test-register")
+        .send({ email: "invalid-email" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(mockController).not.toHaveBeenCalled();
+    });
+
+    test("B4 validation middleware rejects invalid product payload and halts before controller is called", async () => {
+      const res = await request(testApp)
+        .post("/test-product")
+        .send({ price: -10, stock: -5 });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(mockController).not.toHaveBeenCalled();
+    });
+
+    test("passes execution to controller when B4 validation succeeds", async () => {
+      const res = await request(testApp)
+        .post("/test-register")
+        .send({
+          name: "Valid User",
+          email: "valid@example.com",
+          password: "ValidPassword123!",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe("Controller reached");
+      expect(mockController).toHaveBeenCalledTimes(1);
     });
   });
 });

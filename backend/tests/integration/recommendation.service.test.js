@@ -8,7 +8,7 @@ const { createFavourite, deleteFavourite } = require("../../src/models/favourite
 const { getAllProducts, getProductsByCategory } = require("../../src/models/product.model");
 const { getAllCategories } = require("../../src/models/category.model");
 
-describe("Unit Tests: Recommendation Engine Service (Task B7)", () => {
+describe("Integration Tests: Recommendation Engine Service (Task B7)", () => {
   const createdUserIds = [];
   const createdActivityIds = [];
   const createdFavourites = [];

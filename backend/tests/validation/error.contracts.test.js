@@ -2,6 +2,7 @@ const request = require("supertest");
 const app = require("../../src/app");
 const { generateAccessToken } = require("../../src/utils/auth");
 const jwt = require("jsonwebtoken");
+const pool = require("../../src/config/database");
 
 describe("Error Contract Tests: Standard Error Responses & HTTP Status Codes", () => {
   const nonExistentUuid = "99999999-9999-4999-a999-999999999999"; // RFC 4122 v4 compliant
@@ -122,8 +123,16 @@ describe("Error Contract Tests: Standard Error Responses & HTTP Status Codes", (
   });
 
   describe("409 Conflict Contract", () => {
+    let duplicateEmail;
+
+    afterAll(async () => {
+      if (duplicateEmail) {
+        await pool.query("DELETE FROM users WHERE email = $1", [duplicateEmail]);
+      }
+    });
+
     test("returns 409 when attempting duplicate user registration", async () => {
-      const duplicateEmail = `conflict_${Date.now()}@group26.com`;
+      duplicateEmail = `conflict_${Date.now()}@group26.com`;
 
       // First registration
       await request(app).post("/users/register").send({
