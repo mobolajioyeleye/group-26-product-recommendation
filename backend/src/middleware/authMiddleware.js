@@ -15,7 +15,7 @@ const authenticate = (req, res, next) => {
 
     next();
   } catch (error) {
-    return next(ApiError.unauthorized("Invalid or expired token"));
+    return next(error);
   }
 };
 

@@ -210,6 +210,17 @@ runTest("authMiddleware calls next with ApiError.unauthorized when cookie missin
   assert.strictEqual(caughtError.message, "Authentication required");
 });
 
+runTest("authMiddleware forwards native JsonWebTokenError on malformed token", () => {
+  const { authenticate } = require("../src/middleware/authMiddleware");
+  let caughtError = null;
+  const mockReq = { cookies: { accessToken: "malformed.jwt.token" } };
+  authenticate(mockReq, {}, (err) => {
+    caughtError = err;
+  });
+  assert.ok(caughtError);
+  assert.strictEqual(caughtError.name, "JsonWebTokenError");
+});
+
 runTest("roleMiddleware calls next with ApiError.forbidden when role is unauthorized", () => {
   const { authorize } = require("../src/middleware/roleMiddleware");
   let caughtError = null;
@@ -288,6 +299,17 @@ async function runHttpTests() {
     assert.strictEqual(res.status, 401);
     assert.strictEqual(res.body.success, false);
     assert.strictEqual(res.body.message, "Authentication required");
+  });
+
+  await runAsyncTest("GET /api/activities with invalid token cookie returns 401 Invalid authentication token", async () => {
+    const res = await makeRequest({
+      path: "/api/activities",
+      method: "GET",
+      headers: { Cookie: "accessToken=malformed.token.value" },
+    });
+    assert.strictEqual(res.status, 401);
+    assert.strictEqual(res.body.success, false);
+    assert.strictEqual(res.body.message, "Invalid authentication token");
   });
 
   await runAsyncTest("POST /api/products without admin credentials returns 401 Unauthorized", async () => {
