@@ -18,6 +18,11 @@ import RecommendedPage from "./pages/RecommendedPage";
 import SearchPage from "./pages/SearchPage";
 import WelcomePage from "./pages/WelcomePage";
 import { useAuth } from "../context/useAuth";
+import {
+  getFavourites,
+  addFavourite,
+  removeFavourite,
+} from "../services/favouritesApi";
 
 function App() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -76,12 +81,41 @@ const currentUser = user;
     };
   }, []);
 
-  // Keep the current prototype favourites behavior for now.
+  // Sync favourites with the live backend when authenticated
   useEffect(() => {
-    if (currentUser) {
-      writeFavorites(currentUser, favorites);
+    let isMounted = true;
+
+    async function syncLiveFavorites() {
+      if (currentUser) {
+        try {
+          const liveData = await getFavourites();
+          if (isMounted && Array.isArray(liveData)) {
+            const productIds = liveData.map(
+              (item) => item.product_id || item.productId || item.id
+            );
+            setFavorites(productIds);
+            writeFavorites(currentUser, productIds);
+          }
+        } catch (error) {
+          console.warn(
+            "[Favourites] Using cached/local favourites fallback:",
+            error.message
+          );
+          if (isMounted) {
+            setFavorites(readFavorites(currentUser));
+          }
+        }
+      } else {
+        setFavorites([]);
+      }
     }
-  }, [currentUser, favorites]);
+
+    syncLiveFavorites();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
 
 
   const storefrontCategories = Array.from(
@@ -138,26 +172,56 @@ const currentUser = user;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function toggleFavorite(productId) {
+  async function toggleFavorite(productId) {
+    if (!isAuthenticated) {
+      setPendingPage(page);
+      setAuthView("login");
+      setPage("auth");
+      setNotice("Please log in to save items to your favourites.");
+      return;
+    }
+
     const product = catalogProducts.find(
       (item) => item.id === productId
     );
 
     const wasSaved = favorites.includes(productId);
 
-    setFavorites((current) =>
-      current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId]
-    );
+    // Optimistic UI update
+    const updatedFavorites = wasSaved
+      ? favorites.filter((id) => id !== productId)
+      : [...favorites, productId];
+
+    setFavorites(updatedFavorites);
+    if (currentUser) {
+      writeFavorites(currentUser, updatedFavorites);
+    }
 
     setNotice(
       product
         ? `${product.name} ${
             wasSaved ? "removed from" : "added to"
           } your favourites.`
-        : ""
+        : wasSaved
+        ? "Item removed from your favourites."
+        : "Item added to your favourites."
     );
+
+    try {
+      if (wasSaved) {
+        await removeFavourite(productId);
+      } else {
+        await addFavourite(productId);
+      }
+    } catch (error) {
+      console.error("[Favourites] Backend sync error:", error.message);
+      // Rollback on network/API failure
+      setFavorites(favorites);
+      if (currentUser) {
+        writeFavorites(currentUser, favorites);
+      }
+      setNotice(`Could not update favourites: ${error.message}`);
+    }
   }
 
   function openProduct(product) {

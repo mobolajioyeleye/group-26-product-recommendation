@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
 import { Rating, ProductGrid } from '../components/ProductCard'
 import { SectionHeading } from '../components/StoreShell'
+import { recordProductView } from '../../services/activityApi'
 import './pages.css'
 
 export default function ProductDetailsPage({ product, products, favorites, onFavorite, onSelect, onBack }) {
@@ -9,6 +10,12 @@ export default function ProductDetailsPage({ product, products, favorites, onFav
   const [imageStatus, setImageStatus] = useState(product.image ? 'loading' : 'error')
   const isFavorite = favorites.includes(product.id)
   const related = products.filter((item) => item.id !== product.id && item.category === product.category).slice(0, 4)
+
+  useEffect(() => {
+    if (product?.id) {
+      recordProductView(product.id);
+    }
+  }, [product?.id]);
 
   return (
     <div className="page-content detail-page">
