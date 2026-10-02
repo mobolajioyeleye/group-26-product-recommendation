@@ -22,6 +22,7 @@ import {
   getFavourites,
   addFavourite,
   removeFavourite,
+  UUID_TO_SLUG,
 } from "../services/favouritesApi";
 
 function App() {
@@ -90,11 +91,15 @@ const currentUser = user;
         try {
           const liveData = await getFavourites();
           if (isMounted && Array.isArray(liveData)) {
-            const productIds = liveData.map(
-              (item) => item.product_id || item.productId || item.id
-            );
-            setFavorites(productIds);
-            writeFavorites(currentUser, productIds);
+            const backendIds = liveData.flatMap((item) => {
+              const rawId = item.product_id || item.productId || item.id;
+              const slug = UUID_TO_SLUG[rawId];
+              return slug ? [rawId, slug] : [rawId];
+            });
+            const cached = readFavorites(currentUser) || [];
+            const merged = Array.from(new Set([...cached, ...backendIds]));
+            setFavorites(merged);
+            writeFavorites(currentUser, merged);
           }
         } catch (error) {
           console.warn(

@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { isUUID, getFavourites, addFavourite, removeFavourite } from "../src/services/favouritesApi.js";
+import { isUUID, getFavourites, addFavourite, removeFavourite, resolveProductId } from "../src/services/favouritesApi.js";
 import { recordProductView, getUserActivities } from "../src/services/activityApi.js";
 
 console.log("\n=======================================================");
@@ -54,20 +54,25 @@ runTest("isUUID rejects mock slugs and invalid strings", () => {
 // -----------------------------------------------------------------------------
 console.log("\n--- 2. Testing API Contract & Fallback Behaviors ---");
 
-await runAsyncTest("addFavourite handles non-UUID gracefully (offline/mock fallback)", async () => {
-  const result = await addFavourite("earbuds");
-  assert.strictEqual(result.product_id, "earbuds");
+runTest("resolveProductId maps known mock slugs to database UUIDs", () => {
+  assert.strictEqual(resolveProductId("earbuds"), "20000000-0000-0000-0000-000000000100");
+  assert.strictEqual(resolveProductId("smart-watch"), "20000000-0000-0000-0000-000000000106");
+});
+
+await runAsyncTest("addFavourite handles unmapped non-UUID gracefully (offline/mock fallback)", async () => {
+  const result = await addFavourite("unmapped-item-slug");
+  assert.strictEqual(result.product_id, "unmapped-item-slug");
   assert.strictEqual(result.offline, true);
 });
 
-await runAsyncTest("removeFavourite handles non-UUID gracefully (offline/mock fallback)", async () => {
-  const result = await removeFavourite("earbuds");
-  assert.strictEqual(result.product_id, "earbuds");
+await runAsyncTest("removeFavourite handles unmapped non-UUID gracefully (offline/mock fallback)", async () => {
+  const result = await removeFavourite("unmapped-item-slug");
+  assert.strictEqual(result.product_id, "unmapped-item-slug");
   assert.strictEqual(result.offline, true);
 });
 
-await runAsyncTest("recordProductView ignores non-UUID without throwing", async () => {
-  const result = await recordProductView("earbuds");
+await runAsyncTest("recordProductView ignores unmapped non-UUID without throwing", async () => {
+  const result = await recordProductView("unmapped-item-slug");
   assert.strictEqual(result, null);
 });
 

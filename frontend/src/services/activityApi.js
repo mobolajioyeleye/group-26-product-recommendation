@@ -1,22 +1,23 @@
 import { apiRequest } from "./api.js";
-import { isUUID } from "./favouritesApi.js";
+import { isUUID, resolveProductId } from "./favouritesApi.js";
 
 /**
  * Record a product view activity for the authenticated user.
  * Required by PRD FR-14 to feed the recommendation engine.
  *
- * @param {string} productId - Product UUID
+ * @param {string} productId - Product UUID or slug
  * @returns {Promise<Object|null>} Activity record or null if not recordable
  */
 export const recordProductView = async (productId) => {
-  if (!isUUID(productId)) {
+  const targetId = resolveProductId(productId);
+  if (!isUUID(targetId)) {
     return null;
   }
 
   try {
     const response = await apiRequest("/api/activities/view", {
       method: "POST",
-      body: JSON.stringify({ productId }),
+      body: JSON.stringify({ productId: targetId }),
     });
     return response?.data || null;
   } catch (error) {
