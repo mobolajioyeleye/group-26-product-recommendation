@@ -31,9 +31,17 @@ function App() {
   const [productsError, setProductsError] = useState("");
 
   // Restore the correct starting page after a browser refresh.
-  const [page, setPage] = useState(() =>
-    user ? "home" : "welcome"
-  );
+  const [page, setPage] = useState(() => {
+    try {
+      const savedPage =
+        typeof window !== "undefined"
+          ? window.sessionStorage.getItem("piqnora-page")
+          : null;
+      if (savedPage) return savedPage;
+    } catch {}
+    return user ? "home" : "welcome";
+  });
+
 
   const [authView, setAuthView] = useState("login");
   const [pendingPage, setPendingPage] = useState("home");
@@ -167,6 +175,9 @@ function App() {
       } finally {
         setFavorites([]);
         setNotice("");
+        try {
+          window.sessionStorage.removeItem("piqnora-page");
+        } catch {}
         setPage("welcome");
       }
       return;
@@ -186,9 +197,13 @@ function App() {
     }
 
     setPage(nextPage);
+    try {
+      window.sessionStorage.setItem("piqnora-page", nextPage);
+    } catch {}
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
 
   async function toggleFavorite(productId) {
     if (!isAuthenticated) {
