@@ -3,10 +3,17 @@ const API_URL =
   "http://localhost:5000";
 
 export const apiRequest = async (endpoint, options = {}) => {
+  const token =
+    typeof window !== "undefined"
+      ? window.sessionStorage?.getItem("token") ||
+        window.localStorage?.getItem("token")
+      : null;
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     credentials: "include",

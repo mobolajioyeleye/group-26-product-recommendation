@@ -4,7 +4,8 @@ import { apiRequest } from "../services/api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = sessionStorage.getItem("user");
+    const savedUser =
+      sessionStorage.getItem("user") || localStorage.getItem("user");
 
     try {
       return savedUser ? JSON.parse(savedUser) : null;
@@ -18,8 +19,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       sessionStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
     } else {
       sessionStorage.removeItem("user");
+      localStorage.removeItem("user");
     }
   }, [user]);
 
@@ -35,6 +38,10 @@ export const AuthProvider = ({ children }) => {
         }),
       });
 
+      if (data?.token) {
+        sessionStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.token);
+      }
       setUser(data.user);
 
       return data;
@@ -66,6 +73,10 @@ export const AuthProvider = ({ children }) => {
         }),
       });
 
+      if (loginData?.token) {
+        sessionStorage.setItem("token", loginData.token);
+        localStorage.setItem("token", loginData.token);
+      }
       setUser(loginData.user);
 
       return loginData;
@@ -82,6 +93,8 @@ export const AuthProvider = ({ children }) => {
         method: "POST",
       });
     } finally {
+      sessionStorage.removeItem("token");
+      localStorage.removeItem("token");
       setUser(null);
       setLoading(false);
     }

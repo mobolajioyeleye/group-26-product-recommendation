@@ -3,6 +3,7 @@ import { Icon } from "../components/Icon";
 import { Rating, ProductGrid } from "../components/ProductCard";
 import { SectionHeading } from "../components/StoreShell";
 import { recordProductView } from "../../services/activityApi";
+import { isProductFavorited } from "../../services/favouritesApi";
 import "./pages.css";
 
 
@@ -20,7 +21,7 @@ export default function ProductDetailsPage({
     product.image ? "loading" : "error"
   );
 
-  const isFavorite = favorites.includes(product.id);
+  const isFavorite = isProductFavorited(favorites, product?.id);
 
   const related = products
     .filter(

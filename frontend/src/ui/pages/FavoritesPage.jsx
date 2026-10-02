@@ -1,10 +1,11 @@
 import { Icon } from '../components/Icon'
 import { ProductGrid } from '../components/ProductCard'
 import { PageHeading } from '../components/StoreShell'
+import { isProductFavorited } from '../../services/favouritesApi'
 import './pages.css'
 
 export default function FavoritesPage({ products, favorites, onFavorite, onSelect, onNavigate }) {
-  const savedProducts = products.filter((product) => favorites.includes(product.id))
+  const savedProducts = products.filter((product) => isProductFavorited(favorites, product.id))
   return (
     <div className="page-content saved-page">
       <PageHeading eyebrow="YOUR LITTLE COLLECTION" title="My favourites" description="All the good things you've saved, in one place." action={<button className="soft-button" type="button" onClick={() => onNavigate('search')}><Icon name="search" /> Find more</button>} />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "./Icon";
+import { isProductFavorited } from "../../services/favouritesApi";
 import "./store.css";
 
 export function Rating({ value, reviews }) {
@@ -142,7 +143,7 @@ export function ProductGrid({
         <ProductCard
           key={product.id}
           product={product}
-          isFavorite={favorites.includes(product.id)}
+          isFavorite={isProductFavorited(favorites, product.id)}
           onFavorite={onFavorite}
           onSelect={onSelect}
         />

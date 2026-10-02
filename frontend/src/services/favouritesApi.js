@@ -41,6 +41,20 @@ export const resolveProductId = (id) => {
 };
 
 /**
+ * Helper to check whether a product is favorited, testing against
+ * raw ID, UUID mapping, and slug mapping.
+ */
+export const isProductFavorited = (favorites = [], productId) => {
+  if (!Array.isArray(favorites) || !productId) return false;
+  if (favorites.includes(productId)) return true;
+  const uuid = SLUG_TO_UUID[productId];
+  if (uuid && favorites.includes(uuid)) return true;
+  const slug = UUID_TO_SLUG[productId];
+  if (slug && favorites.includes(slug)) return true;
+  return false;
+};
+
+/**
  * Retrieve all favourite products for the authenticated user.
  * @returns {Promise<Array>} Array of favourite items with product details
  */
@@ -69,6 +83,14 @@ export const addFavourite = async (productId) => {
     });
     return response?.data;
   } catch (error) {
+    // If already in favourites on backend (409 Conflict), treat as successful sync
+    if (
+      error?.response?.status === 409 ||
+      error?.message?.toLowerCase().includes("already in your favourites")
+    ) {
+      return { product_id: targetId, alreadyFavorited: true };
+    }
+
     // If backend rejects prototype/seed mock UUID format or product is not in database yet,
     // gracefully retain favorite locally without showing an error to the user
     if (
@@ -104,13 +126,13 @@ export const removeFavourite = async (productId) => {
     });
     return response?.data;
   } catch (error) {
-    // If backend rejects non-standard ID or favourite is not found on backend,
+    // If backend rejects non-standard ID or favourite is not found on backend (404),
     // gracefully succeed locally
     if (
-      error?.message?.toLowerCase().includes("uuid") ||
-      error?.message?.toLowerCase().includes("not found") ||
+      error?.response?.status === 404 ||
       error?.response?.status === 400 ||
-      error?.response?.status === 404
+      error?.message?.toLowerCase().includes("uuid") ||
+      error?.message?.toLowerCase().includes("not found")
     ) {
       console.warn(
         `[Favourites] Backend remove fallback for ${targetId}:`,

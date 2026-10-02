@@ -17,7 +17,9 @@ import {
   getFavourites,
   addFavourite,
   removeFavourite,
+  isProductFavorited,
   UUID_TO_SLUG,
+  SLUG_TO_UUID,
 } from "../services/favouritesApi";
 
 function App() {
@@ -218,11 +220,15 @@ function App() {
       (item) => item.id === productId
     );
 
-    const wasSaved = favorites.includes(productId);
+    const wasSaved = isProductFavorited(favorites, productId);
+    const targetUuid = SLUG_TO_UUID[productId];
+    const targetSlug = UUID_TO_SLUG[productId];
 
     // Optimistic UI update
     const updatedFavorites = wasSaved
-      ? favorites.filter((id) => id !== productId)
+      ? favorites.filter(
+          (id) => id !== productId && id !== targetUuid && id !== targetSlug
+        )
       : [...favorites, productId];
 
     setFavorites(updatedFavorites);
@@ -420,6 +426,9 @@ function App() {
   }
 
   const shellPage = page === "detail" ? "home" : page;
+  const uniqueFavoritesCount = new Set(
+    favorites.map((id) => SLUG_TO_UUID[id] || id)
+  ).size;
 
   return (
     <StoreShell
@@ -427,7 +436,7 @@ function App() {
       isAuthenticated={isAuthenticated}
       user={currentUser}
       categories={storefrontCategories}
-      favoritesCount={favorites.length}
+      favoritesCount={uniqueFavoritesCount}
       announcement={notice}
       onNavigate={navigate}
       onSearch={setSearchValue}
