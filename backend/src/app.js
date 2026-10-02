@@ -46,7 +46,6 @@ app.use(cookieParser());
 
 // General API rate limiter for /api routes
 app.use("/api", apiLimiter);
-
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
