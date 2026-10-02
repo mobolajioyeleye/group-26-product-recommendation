@@ -21,14 +21,15 @@ const {
   updateUserValidator,
   updatePasswordValidator,
 } = require("../validators/user.validator");
+const { authLimiter } = require("../middleware/rateLimiter");
 
 const router = express.Router();
 
 //public route
-//register user
-router.post("/register", registerValidator, validate, create);
-//login
-router.post("/login", loginValidator, validate, login);
+//register user (rate-limited against brute-force account creation)
+router.post("/register", authLimiter, registerValidator, validate, create);
+//login (rate-limited against brute-force credential stuffing)
+router.post("/login", authLimiter, loginValidator, validate, login);
 //logout
 router.post("/logout", logout);
 

@@ -15,6 +15,12 @@ const errorHandler = (err, req, res, next) => {
     message = "Invalid JSON request body";
   }
 
+  // 1b. Request payload too large (Express body-parser entity.too.large / 413)
+  if (err.type === "entity.too.large" || err.status === 413 || err.statusCode === 413) {
+    statusCode = 413;
+    message = "Request payload exceeds size limit";
+  }
+
   // 2. PostgreSQL unique constraint violation (Code 23505)
   if (err.code === "23505") {
     statusCode = 409;

@@ -1,10 +1,14 @@
 const express = require("express");
 const cors = require("cors");
-const notFound = require("./middleware/notFound");
-const errorHandler = require("./middleware/errorHandler");
-const userRoutes = require("./routes/userRoute");
+const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 
+const { allowedOrigins, validateEnv } = require("./config/env");
+const { apiLimiter } = require("./middleware/rateLimiter");
+const notFound = require("./middleware/notFound");
+const errorHandler = require("./middleware/errorHandler");
+
+const userRoutes = require("./routes/userRoute");
 const categoryRoutes = require("./routes/category.routes");
 const productRoutes = require("./routes/product.routes");
 const activityRoutes = require("./routes/activity.routes");
@@ -12,18 +16,37 @@ const favouriteRoutes = require("./routes/favourite.routes");
 const recommendationRoutes = require("./routes/recommendation.routes");
 const { router: swaggerRouter } = require("./docs/swagger");
 
+// Validate critical secrets/environment variables at initialization
+validateEnv();
+
 const app = express();
 
-// Common middleware
+// Security HTTP headers via Helmet
+app.use(helmet());
 
-app.use(express.json());
-app.use(cookieParser());
+// Hardened CORS configuration with credentials support
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, Postman) or allowed domains
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS policy does not allow access from this origin"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
+
+// Payload size limit to prevent denial of service (DoS) via large payloads
+app.use(express.json({ limit: "10kb" }));
+app.use(cookieParser());
+
+// General API rate limiter for /api routes
+app.use("/api", apiLimiter);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
