@@ -43,6 +43,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (name, email, password) => {
+    setLoading(true);
+
+    try {
+      await apiRequest("/users/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      // Registration does not create the auth cookie,
+      // so log the user in immediately after registration.
+      const loginData = await apiRequest("/users/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      setUser(loginData.user);
+
+      return loginData;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
 
@@ -62,6 +93,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: Boolean(user),
     isAdmin: user?.role === "Administrator",
     login,
+    register,
     logout,
     setUser,
   };
