@@ -237,11 +237,14 @@ A dedicated security verification suite was implemented in `backend/scripts/test
 From the `backend/` directory, run:
 
 ```bash
-# Run automated security verification suite
+# Run automated security verification suite (19 tests)
 npm run test:security
 
-# Run error handling and API standards verification suite
+# Run complete Jest test suite (85 tests)
 npm test
+
+# Run error handling and API standards verification suite (26 tests)
+npm run test:errors
 ```
 
 ---
