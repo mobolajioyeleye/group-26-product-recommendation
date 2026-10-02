@@ -315,7 +315,7 @@ async function runSecurityTests() {
       },
       JSON.stringify({ data: hugePayload })
     );
-    assert.ok(res.status === 413 || res.status === 400);
+    assert.strictEqual(res.status, 413);
   });
 
   // -----------------------------------------------------------------------------

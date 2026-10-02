@@ -240,7 +240,7 @@ From the `backend/` directory, run:
 # Run automated security verification suite (19 tests)
 npm run test:security
 
-# Run complete Jest test suite (85 tests)
+# Run complete Jest test suite (81 tests)
 npm test
 
 # Run error handling and API standards verification suite (26 tests)
