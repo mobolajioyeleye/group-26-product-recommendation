@@ -51,11 +51,11 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Keep prototype favourites behavior for now.
-  // F6 will replace this with the real favourites API.
-  const [favorites, setFavorites] = useState(() =>
-    user ? readFavorites(user) : []
-  );
+  // Always start with empty favourites. The database is the single
+  // source of truth for authenticated users — stale localStorage is
+  // never used to pre-populate state on mount.
+  const [favorites, setFavorites] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(Boolean(user));
 
   const [notice, setNotice] = useState("");
 
@@ -112,6 +112,7 @@ function App() {
 
     async function syncLiveFavorites() {
       if (currentUser) {
+        setFavoritesLoading(true);
         try {
           const liveData = await getFavourites();
           if (isMounted && Array.isArray(liveData)) {
@@ -126,15 +127,19 @@ function App() {
           }
         } catch (error) {
           console.warn(
-            "[Favourites] Live favourites fetch fallback:",
+            "[Favourites] Live favourites fetch failed:",
             error.message
           );
+          // If backend is unreachable, fall back to localStorage only as last resort.
           if (isMounted) {
             setFavorites(readFavorites(currentUser));
           }
+        } finally {
+          if (isMounted) setFavoritesLoading(false);
         }
       } else {
         setFavorites([]);
+        setFavoritesLoading(false);
       }
     }
 
@@ -154,7 +159,7 @@ function App() {
       window.removeEventListener("focus", handleSyncOnFocus);
       document.removeEventListener("visibilitychange", handleSyncOnFocus);
     };
-  }, [currentUser, page]);
+  }, [currentUser]);
 
   const storefrontCategories = Array.from(
     new Set([
@@ -318,6 +323,7 @@ function App() {
     products: catalogProducts,
     categories: storefrontCategories,
     favorites,
+    favoritesLoading,
     user: currentUser,
     onFavorite: toggleFavorite,
     onSelect: openProduct,
