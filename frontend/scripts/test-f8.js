@@ -1,3 +1,4 @@
+/* global process */
 import assert from "node:assert";
 import {
   createProduct,
@@ -6,8 +7,6 @@ import {
   createCategory,
   deleteCategory,
 } from "../src/services/adminApi.js";
-
-/* global process */
 
 console.log("\n=======================================================");
 console.log("   TASK F8: ADMIN DASHBOARD & MANAGEMENT VERIFICATION");
