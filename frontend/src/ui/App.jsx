@@ -115,24 +115,26 @@ function App() {
         setFavoritesLoading(true);
         try {
           const liveData = await getFavourites();
+          console.log("[F6 Sync] Backend returned:", liveData?.length, "items", liveData);
           if (isMounted && Array.isArray(liveData)) {
             const backendIds = liveData.flatMap((item) => {
               const rawId = item.product_id || item.productId || item.id;
               const slug = UUID_TO_SLUG[rawId];
               return slug ? [rawId, slug] : [rawId];
             });
+            console.log("[F6 Sync] Setting favorites to:", backendIds.length, "IDs:", backendIds);
             // The database is the single source of truth for authenticated users.
             setFavorites(backendIds);
             writeFavorites(currentUser, backendIds);
           }
         } catch (error) {
-          console.warn(
-            "[Favourites] Live favourites fetch failed:",
-            error.message
+          console.error(
+            "[F6 Sync] FETCH FAILED — will show 0 favorites. Error:", error.message,
+            "Status:", error?.response?.status
           );
-          // If backend is unreachable, fall back to localStorage only as last resort.
+          // On any error (including 401), show 0 — never show stale cached data.
           if (isMounted) {
-            setFavorites(readFavorites(currentUser));
+            setFavorites([]);
           }
         } finally {
           if (isMounted) setFavoritesLoading(false);
