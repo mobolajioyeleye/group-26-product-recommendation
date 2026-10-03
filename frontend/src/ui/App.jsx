@@ -40,10 +40,11 @@ function App() {
           ? window.sessionStorage.getItem("piqnora-page")
           : null;
       if (savedPage) return savedPage;
-    } catch {}
+    } catch {
+      // Ignore session storage errors.
+    }
     return user ? "home" : "welcome";
   });
-
 
   const [authView, setAuthView] = useState("login");
   const [pendingPage, setPendingPage] = useState("home");
@@ -105,6 +106,7 @@ function App() {
   const adminRouteRequested =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("view") === "admin";
+
   // Sync favourites with the live backend when authenticated
   useEffect(() => {
     let isMounted = true;
@@ -112,14 +114,17 @@ function App() {
     async function syncLiveFavorites() {
       if (currentUser) {
         setFavoritesLoading(true);
+
         try {
           const liveData = await getFavourites();
+
           if (isMounted && Array.isArray(liveData)) {
             const backendIds = liveData.flatMap((item) => {
               const rawId = item.product_id || item.productId || item.id;
               const slug = UUID_TO_SLUG[rawId];
               return slug ? [rawId, slug] : [rawId];
             });
+
             // The database is the single source of truth for authenticated users.
             setFavorites(backendIds);
             writeFavorites(currentUser, backendIds);
@@ -181,11 +186,16 @@ function App() {
       } finally {
         setFavorites([]);
         setNotice("");
+
         try {
           window.sessionStorage.removeItem("piqnora-page");
-        } catch {}
+        } catch {
+          // Ignore session storage errors.
+        }
+
         setPage("welcome");
       }
+
       return;
     }
 
@@ -203,13 +213,16 @@ function App() {
     }
 
     setPage(nextPage);
+
     try {
       window.sessionStorage.setItem("piqnora-page", nextPage);
-    } catch {}
+    } catch {
+      // Ignore session storage errors.
+    }
+
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
 
   async function toggleFavorite(productId) {
     if (!isAuthenticated) {
@@ -236,6 +249,7 @@ function App() {
       : [...favorites, productId];
 
     setFavorites(updatedFavorites);
+
     if (currentUser) {
       writeFavorites(currentUser, updatedFavorites);
     }
@@ -258,11 +272,14 @@ function App() {
       }
     } catch (error) {
       console.error("[Favourites] Backend sync error:", error.message);
+
       // Rollback on network/API failure
       setFavorites(favorites);
+
       if (currentUser) {
         writeFavorites(currentUser, favorites);
       }
+
       setNotice(`Could not update favourites: ${error.message}`);
     }
   }
@@ -283,28 +300,34 @@ function App() {
           setNotice(
             `Welcome to piqnora, ${loggedInUser.name}.`
           );
+
           window.scrollTo({
             top: 0,
             behavior: "smooth",
           });
+
           try {
             const liveData = await getFavourites();
+
             if (Array.isArray(liveData)) {
               const backendIds = liveData.flatMap((item) => {
                 const rawId = item.product_id || item.productId || item.id;
                 const slug = UUID_TO_SLUG[rawId];
                 return slug ? [rawId, slug] : [rawId];
               });
+
               setFavorites(backendIds);
               writeFavorites(loggedInUser, backendIds);
             }
           } catch (e) {
-            console.warn("[Favourites] Login sync fallback:", e.message);
+            console.warn(
+              "[Favourites] Login sync fallback:",
+              e.message
+            );
             setFavorites(readFavorites(loggedInUser));
           }
         }}
       />
-
     );
   }
 
@@ -429,6 +452,7 @@ function App() {
   }
 
   const shellPage = page === "detail" ? "home" : page;
+
   const uniqueFavoritesCount = new Set(
     favorites.map((id) => SLUG_TO_UUID[id] || id)
   ).size;

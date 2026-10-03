@@ -19,9 +19,12 @@ export default function SearchPage({
   onSelect,
   onSearch,
 }) {
-  const [category, setCategory] = useState(
-    initialCategory || "All products"
+  const [selectedCategories, setSelectedCategories] = useState(
+    initialCategory && initialCategory !== "All products"
+      ? [initialCategory]
+      : []
   );
+
   const [sort, setSort] = useState("Recommended");
   const [maxPrice, setMaxPrice] = useState(5000);
   const [searchResults, setSearchResults] = useState(products);
@@ -43,8 +46,9 @@ export default function SearchPage({
       setSearchError("");
 
       try {
-        let results = products;
+        let results = [];
 
+        // Search products from the backend first.
         if (query) {
           const backendProducts = await searchProducts(query);
 
@@ -52,22 +56,59 @@ export default function SearchPage({
             backendProducts,
             categories
           );
-        } else if (category !== "All products") {
-          const selectedCategory = categories.find(
-            (item) => item.name === category
+
+          // Apply multiple selected categories to search results.
+          if (selectedCategories.length > 0) {
+            const selectedSet = new Set(
+              selectedCategories.map((name) =>
+                name.toLowerCase()
+              )
+            );
+
+            results = results.filter((product) =>
+              selectedSet.has(
+                String(product.category || "").toLowerCase()
+              )
+            );
+          }
+        }
+
+        // No search text, but one or more categories selected.
+        else if (selectedCategories.length > 0) {
+          const selectedCategoryObjects = categories.filter(
+            (item) =>
+              selectedCategories.includes(item.name) &&
+              item.id
           );
 
-          if (selectedCategory?.id) {
-            const backendProducts =
-              await getProductsByCategory(selectedCategory.id);
+          const categoryResults = await Promise.all(
+            selectedCategoryObjects.map(async (categoryItem) => {
+              const backendProducts =
+                await getProductsByCategory(categoryItem.id);
 
-            results = normalizeProducts(
-              backendProducts,
-              categories
-            );
-          } else {
-            results = [];
-          }
+              return normalizeProducts(
+                backendProducts,
+                categories
+              );
+            })
+          );
+
+          // Combine products from all selected categories
+          // and remove duplicates.
+          const uniqueProducts = new Map();
+
+          categoryResults.flat().forEach((product) => {
+            if (product?.id) {
+              uniqueProducts.set(product.id, product);
+            }
+          });
+
+          results = Array.from(uniqueProducts.values());
+        }
+
+        // No search and no category filter.
+        else {
+          results = products;
         }
 
         if (cancelled) {
@@ -99,19 +140,35 @@ export default function SearchPage({
       cancelled = true;
       window.clearTimeout(timerId);
     };
-  }, [searchValue, category, products, categories]);
+  }, [
+    searchValue,
+    selectedCategories,
+    products,
+    categories,
+  ]);
 
   const matchingProducts = useMemo(() => {
     let results = [...searchResults];
 
-    if (category !== "All products") {
-      results = results.filter(
-        (product) => product.category === category
+    // Extra client-side category check keeps the UI consistent
+    // with the selected checkboxes.
+    if (selectedCategories.length > 0) {
+      const selectedSet = new Set(
+        selectedCategories.map((name) =>
+          name.toLowerCase()
+        )
+      );
+
+      results = results.filter((product) =>
+        selectedSet.has(
+          String(product.category || "").toLowerCase()
+        )
       );
     }
 
     results = results.filter(
-      (product) => Number(product.price) <= maxPrice
+      (product) =>
+        Number(product.price) <= maxPrice
     );
 
     if (sort === "Price: low to high") {
@@ -122,18 +179,37 @@ export default function SearchPage({
     }
 
     return results;
-  }, [searchResults, category, maxPrice, sort]);
+  }, [
+    searchResults,
+    selectedCategories,
+    maxPrice,
+    sort,
+  ]);
 
-  function handleCategoryChange(nextCategory) {
-    setCategory(nextCategory);
+  function toggleCategory(categoryName) {
+    if (categoryName === "All products") {
+      setSelectedCategories([]);
+      return;
+    }
+
+    setSelectedCategories((current) =>
+      current.includes(categoryName)
+        ? current.filter(
+            (name) => name !== categoryName
+          )
+        : [...current, categoryName]
+    );
   }
 
   function clearFilters() {
-    setCategory("All products");
+    setSelectedCategories([]);
     setMaxPrice(5000);
     setSort("Recommended");
     onSearch("");
   }
+
+  const allProductsSelected =
+    selectedCategories.length === 0;
 
   return (
     <div className="page-content results-page">
@@ -163,23 +239,29 @@ export default function SearchPage({
       <div className="results-toolbar">
         <div
           className="filter-tabs"
-          role="tablist"
+          role="group"
           aria-label="Filter by category"
         >
-          {filters.map((filter) => (
-            <button
-              className={
-                category === filter ? "active" : ""
-              }
-              key={filter}
-              type="button"
-              onClick={() =>
-                handleCategoryChange(filter)
-              }
-            >
-              {filter}
-            </button>
-          ))}
+          {filters.map((filter) => {
+            const isActive =
+              filter === "All products"
+                ? allProductsSelected
+                : selectedCategories.includes(filter);
+
+            return (
+              <button
+                className={isActive ? "active" : ""}
+                key={filter}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() =>
+                  toggleCategory(filter)
+                }
+              >
+                {filter}
+              </button>
+            );
+          })}
         </div>
 
         <label className="sort-select">
@@ -213,28 +295,31 @@ export default function SearchPage({
           <fieldset>
             <legend>Category</legend>
 
-            {categories.map((item) => (
-              <label
-                className="filter-check"
-                key={item.id}
-              >
-                <input
-                  type="checkbox"
-                  checked={category === item.name}
-                  onChange={() =>
-                    setCategory(
-                      category === item.name
-                        ? "All products"
-                        : item.name
-                    )
-                  }
-                />
+            {categories.map((item) => {
+              const isChecked =
+                selectedCategories.includes(item.name);
 
-                <span>{item.name}</span>
+              return (
+                <label
+                  className="filter-check"
+                  key={item.id}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() =>
+                      toggleCategory(item.name)
+                    }
+                  />
 
-                <small>{item.count ?? 0}</small>
-              </label>
-            ))}
+                  <span>{item.name}</span>
+
+                  <small>
+                    {item.count ?? 0}
+                  </small>
+                </label>
+              );
+            })}
           </fieldset>
 
           <fieldset>
@@ -242,20 +327,23 @@ export default function SearchPage({
 
             <div className="price-range-label">
               <span>$0</span>
+
               <strong>
                 Up to ${maxPrice}
               </strong>
             </div>
 
             <input
-  className="range-input"
-  type="range"
-  min="0"
-  max="5000"
+              className="range-input"
+              type="range"
+              min="0"
+              max="5000"
               step="10"
               value={maxPrice}
               onChange={(event) =>
-                setMaxPrice(Number(event.target.value))
+                setMaxPrice(
+                  Number(event.target.value)
+                )
               }
               aria-label="Maximum price"
             />
@@ -275,16 +363,22 @@ export default function SearchPage({
           {isSearching ? (
             <div className="empty-state">
               <span>⌛</span>
+
               <h3>Searching products...</h3>
+
               <p>
-                We're finding products that match your
-                search.
+                We're finding products that match
+                your search.
               </p>
             </div>
           ) : searchError ? (
             <div className="empty-state">
               <span>⚠️</span>
-              <h3>Unable to search products</h3>
+
+              <h3>
+                Unable to search products
+              </h3>
+
               <p>{searchError}</p>
             </div>
           ) : (
