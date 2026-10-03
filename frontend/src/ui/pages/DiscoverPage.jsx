@@ -37,10 +37,8 @@ export default function DiscoverPage({ products, categories = [], favorites, use
 
   const trending = products.slice().sort((first, second) => second.rating - first.rating).slice(0, 4)
 
-  // Use backend recommendations, falling back to top products if backend recommendations not loaded yet
-  const effectiveRecommendations = recommendations.length > 0 ? recommendations : products
-  const heroSlides = effectiveRecommendations.slice(0, 3)
-  const picks = (recommendations.length >= 4 ? recommendations.slice(0, 4) : effectiveRecommendations.slice(0, 4))
+  const heroSlides = recommendations.slice(0, 3)
+  const picks = recommendations.slice(0, 4)
 
   const [activeSlide, setActiveSlide] = useState(0)
   const safeSlideIndex = heroSlides.length ? activeSlide % heroSlides.length : 0
