@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { readFavorites } from "./data/catalogStorage";
+import { readFavorites, writeFavorites } from "./data/catalogStorage";
 import { getProducts, getCategories } from "../services/api";
 import { normalizeProducts } from "./data/productAdapter";
 import AuthPage from "./components/AuthPage";
@@ -13,6 +13,14 @@ import RecommendedPage from "./pages/RecommendedPage";
 import SearchPage from "./pages/SearchPage";
 import WelcomePage from "./pages/WelcomePage";
 import { useAuth } from "../context/useAuth";
+import {
+  getFavourites,
+  addFavourite,
+  removeFavourite,
+  isProductFavorited,
+  UUID_TO_SLUG,
+  SLUG_TO_UUID,
+} from "../services/favouritesApi";
 
 function App() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -25,9 +33,18 @@ function App() {
   const [productsError, setProductsError] = useState("");
 
   // Restore the correct starting page after a browser refresh.
-  const [page, setPage] = useState(() =>
-    user ? "home" : "welcome"
-  );
+  const [page, setPage] = useState(() => {
+    try {
+      const savedPage =
+        typeof window !== "undefined"
+          ? window.sessionStorage.getItem("piqnora-page")
+          : null;
+      if (savedPage) return savedPage;
+    } catch {
+      // Ignore session storage errors.
+    }
+    return user ? "home" : "welcome";
+  });
 
   const [authView, setAuthView] = useState("login");
   const [pendingPage, setPendingPage] = useState("home");
@@ -35,11 +52,11 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Keep prototype favourites behavior for now.
-  // F6 will replace this with the real favourites API.
-  const [favorites, setFavorites] = useState(() =>
-    user ? readFavorites(user) : []
-  );
+  // Always start with empty favourites. The database is the single
+  // source of truth for authenticated users — stale localStorage is
+  // never used to pre-populate state on mount.
+  const [favorites, setFavorites] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(Boolean(user));
 
   const [notice, setNotice] = useState("");
 
@@ -90,13 +107,67 @@ function App() {
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("view") === "admin";
 
-    const storefrontCategories = categories.map((category) => ({
-      id: category.id,
-      name: category.name,
-      count: catalogProducts.filter(
-        (product) => product.category === category.name
-      ).length,
-    }));
+  // Sync favourites with the live backend when authenticated
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncLiveFavorites() {
+      if (currentUser) {
+        setFavoritesLoading(true);
+
+        try {
+          const liveData = await getFavourites();
+
+          if (isMounted && Array.isArray(liveData)) {
+            const backendIds = liveData.flatMap((item) => {
+              const rawId = item.product_id || item.productId || item.id;
+              const slug = UUID_TO_SLUG[rawId];
+              return slug ? [rawId, slug] : [rawId];
+            });
+
+            // The database is the single source of truth for authenticated users.
+            setFavorites(backendIds);
+            writeFavorites(currentUser, backendIds);
+          }
+        } catch {
+          // On any error (including 401), show empty — never show stale cached data.
+          if (isMounted) {
+            setFavorites([]);
+          }
+        } finally {
+          if (isMounted) setFavoritesLoading(false);
+        }
+      } else {
+        setFavorites([]);
+        setFavoritesLoading(false);
+      }
+    }
+
+    syncLiveFavorites();
+
+    const handleSyncOnFocus = () => {
+      if (document.visibilityState === "visible") {
+        syncLiveFavorites();
+      }
+    };
+
+    window.addEventListener("focus", handleSyncOnFocus);
+    document.addEventListener("visibilitychange", handleSyncOnFocus);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("focus", handleSyncOnFocus);
+      document.removeEventListener("visibilitychange", handleSyncOnFocus);
+    };
+  }, [currentUser]);
+
+  const storefrontCategories = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    count: catalogProducts.filter(
+      (product) => product.category === category.name
+    ).length,
+  }));
 
   if (adminRouteRequested) {
     return <AdminApp />;
@@ -115,8 +186,16 @@ function App() {
       } finally {
         setFavorites([]);
         setNotice("");
+
+        try {
+          window.sessionStorage.removeItem("piqnora-page");
+        } catch {
+          // Ignore session storage errors.
+        }
+
         setPage("welcome");
       }
+
       return;
     }
 
@@ -134,30 +213,75 @@ function App() {
     }
 
     setPage(nextPage);
+
+    try {
+      window.sessionStorage.setItem("piqnora-page", nextPage);
+    } catch {
+      // Ignore session storage errors.
+    }
+
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function toggleFavorite(productId) {
+  async function toggleFavorite(productId) {
+    if (!isAuthenticated) {
+      setPendingPage(page);
+      setAuthView("login");
+      setPage("auth");
+      setNotice("Please log in to save items to your favourites.");
+      return;
+    }
+
     const product = catalogProducts.find(
       (item) => item.id === productId
     );
 
-    const wasSaved = favorites.includes(productId);
+    const wasSaved = isProductFavorited(favorites, productId);
+    const targetUuid = SLUG_TO_UUID[productId];
+    const targetSlug = UUID_TO_SLUG[productId];
 
-    setFavorites((current) =>
-      current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId]
-    );
+    // Optimistic UI update
+    const updatedFavorites = wasSaved
+      ? favorites.filter(
+          (id) => id !== productId && id !== targetUuid && id !== targetSlug
+        )
+      : [...favorites, productId];
+
+    setFavorites(updatedFavorites);
+
+    if (currentUser) {
+      writeFavorites(currentUser, updatedFavorites);
+    }
 
     setNotice(
       product
         ? `${product.name} ${
             wasSaved ? "removed from" : "added to"
           } your favourites.`
-        : ""
+        : wasSaved
+        ? "Item removed from your favourites."
+        : "Item added to your favourites."
     );
+
+    try {
+      if (wasSaved) {
+        await removeFavourite(productId);
+      } else {
+        await addFavourite(productId);
+      }
+    } catch (error) {
+      console.error("[Favourites] Backend sync error:", error.message);
+
+      // Rollback on network/API failure
+      setFavorites(favorites);
+
+      if (currentUser) {
+        writeFavorites(currentUser, favorites);
+      }
+
+      setNotice(`Could not update favourites: ${error.message}`);
+    }
   }
 
   function openProduct(product) {
@@ -171,16 +295,37 @@ function App() {
       <AuthPage
         key={authView}
         initialView={authView}
-        onSuccess={(loggedInUser) => {
-          setFavorites(readFavorites(loggedInUser));
+        onSuccess={async (loggedInUser) => {
           setPage(pendingPage);
           setNotice(
             `Welcome to piqnora, ${loggedInUser.name}.`
           );
+
           window.scrollTo({
             top: 0,
             behavior: "smooth",
           });
+
+          try {
+            const liveData = await getFavourites();
+
+            if (Array.isArray(liveData)) {
+              const backendIds = liveData.flatMap((item) => {
+                const rawId = item.product_id || item.productId || item.id;
+                const slug = UUID_TO_SLUG[rawId];
+                return slug ? [rawId, slug] : [rawId];
+              });
+
+              setFavorites(backendIds);
+              writeFavorites(loggedInUser, backendIds);
+            }
+          } catch (e) {
+            console.warn(
+              "[Favourites] Login sync fallback:",
+              e.message
+            );
+            setFavorites(readFavorites(loggedInUser));
+          }
         }}
       />
     );
@@ -190,6 +335,7 @@ function App() {
     products: catalogProducts,
     categories: storefrontCategories,
     favorites,
+    favoritesLoading,
     user: currentUser,
     onFavorite: toggleFavorite,
     onSelect: openProduct,
@@ -307,13 +453,17 @@ function App() {
 
   const shellPage = page === "detail" ? "home" : page;
 
+  const uniqueFavoritesCount = new Set(
+    favorites.map((id) => SLUG_TO_UUID[id] || id)
+  ).size;
+
   return (
     <StoreShell
       page={shellPage}
       isAuthenticated={isAuthenticated}
       user={currentUser}
       categories={storefrontCategories}
-      favoritesCount={favorites.length}
+      favoritesCount={uniqueFavoritesCount}
       announcement={notice}
       onNavigate={navigate}
       onSearch={setSearchValue}
