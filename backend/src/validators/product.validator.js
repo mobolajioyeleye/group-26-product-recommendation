@@ -95,7 +95,9 @@ const productIdValidator = [
 // Products by category
 const categoryProductValidator = [
   param("categoryId")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Category ID must be a valid UUID"),
 ];
 

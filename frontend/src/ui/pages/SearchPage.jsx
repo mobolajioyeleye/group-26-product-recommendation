@@ -1,53 +1,303 @@
-import { useMemo, useState } from 'react'
-import { Icon } from '../components/Icon'
-import { ProductGrid } from '../components/ProductCard'
-import { PageHeading } from '../components/StoreShell'
-import './pages.css'
+import { useEffect, useMemo, useState } from "react";
+import { Icon } from "../components/Icon";
+import { ProductGrid } from "../components/ProductCard";
+import { PageHeading } from "../components/StoreShell";
+import {
+  searchProducts,
+  getProductsByCategory,
+} from "../../services/api";
+import { normalizeProducts } from "../data/productAdapter";
+import "./pages.css";
 
-export default function SearchPage({ products, categories = [], favorites, searchValue, initialCategory, onFavorite, onSelect, onSearch }) {
-  const [category, setCategory] = useState(initialCategory || 'All products')
-  const [sort, setSort] = useState('Recommended')
-  const [maxPrice, setMaxPrice] = useState(300)
-  const [minRating, setMinRating] = useState(0)
-  const filters = ['All products', ...new Set([
+export default function SearchPage({
+  products,
+  categories = [],
+  favorites,
+  searchValue,
+  initialCategory,
+  onFavorite,
+  onSelect,
+  onSearch,
+}) {
+  const [category, setCategory] = useState(
+    initialCategory || "All products"
+  );
+  const [sort, setSort] = useState("Recommended");
+  const [maxPrice, setMaxPrice] = useState(5000);
+  const [searchResults, setSearchResults] = useState(products);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  const filters = [
+    "All products",
     ...categories.map((item) => item.name),
-    ...products.map((product) => product.category)
-  ])]
+  ];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSearchResults() {
+      const query = searchValue.trim();
+
+      setIsSearching(true);
+      setSearchError("");
+
+      try {
+        let results = products;
+
+        if (query) {
+          const backendProducts = await searchProducts(query);
+
+          results = normalizeProducts(
+            backendProducts,
+            categories
+          );
+        } else if (category !== "All products") {
+          const selectedCategory = categories.find(
+            (item) => item.name === category
+          );
+
+          if (selectedCategory?.id) {
+            const backendProducts =
+              await getProductsByCategory(selectedCategory.id);
+
+            results = normalizeProducts(
+              backendProducts,
+              categories
+            );
+          } else {
+            results = [];
+          }
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setSearchResults(results);
+      } catch (error) {
+        if (!cancelled) {
+          setSearchResults([]);
+          setSearchError(
+            error.message ||
+              "Unable to search products right now."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSearching(false);
+        }
+      }
+    }
+
+    const timerId = window.setTimeout(
+      loadSearchResults,
+      searchValue.trim() ? 300 : 0
+    );
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
+  }, [searchValue, category, products, categories]);
 
   const matchingProducts = useMemo(() => {
-    const query = searchValue.trim().toLowerCase()
-    const results = products.filter((product) => {
-      const matchesQuery = !query || `${product.name} ${product.category}`.toLowerCase().includes(query)
-      const matchesCategory = category === 'All products' || product.category === category
-      return matchesQuery && matchesCategory && product.price <= maxPrice && product.rating >= minRating
-    })
-    if (sort === 'Price: low to high') results.sort((a, b) => a.price - b.price)
-    if (sort === 'Top rated') results.sort((a, b) => b.rating - a.rating)
-    return results
-  }, [products, searchValue, category, maxPrice, minRating, sort])
+    let results = [...searchResults];
+
+    if (category !== "All products") {
+      results = results.filter(
+        (product) => product.category === category
+      );
+    }
+
+    results = results.filter(
+      (product) => Number(product.price) <= maxPrice
+    );
+
+    if (sort === "Price: low to high") {
+      results.sort(
+        (first, second) =>
+          Number(first.price) - Number(second.price)
+      );
+    }
+
+    return results;
+  }, [searchResults, category, maxPrice, sort]);
+
+  function handleCategoryChange(nextCategory) {
+    setCategory(nextCategory);
+  }
+
+  function clearFilters() {
+    setCategory("All products");
+    setMaxPrice(5000);
+    setSort("Recommended");
+    onSearch("");
+  }
 
   return (
     <div className="page-content results-page">
-      <PageHeading eyebrow="DISCOVER / SEARCH" title="Find your next favourite" description="A world of good things, picked just for you." />
-      <div className="results-searchbar"><span><Icon name="search" /></span><input value={searchValue} onChange={(event) => onSearch(event.target.value)} placeholder="Try ‘wireless headphones’" aria-label="Search products" /><kbd>Enter</kbd></div>
-      <div className="results-toolbar">
-        <div className="filter-tabs" role="tablist" aria-label="Filter by category">
-          {filters.map((filter) => <button className={category === filter ? 'active' : ''} key={filter} type="button" onClick={() => setCategory(filter)}>{filter}</button>)}
-        </div>
-        <label className="sort-select">Sort by <select value={sort} onChange={(event) => setSort(event.target.value)}><option>Recommended</option><option>Price: low to high</option><option>Top rated</option></select></label>
+      <PageHeading
+        eyebrow="DISCOVER / SEARCH"
+        title="Find your next favourite"
+        description="A world of good things, picked just for you."
+      />
+
+      <div className="results-searchbar">
+        <span>
+          <Icon name="search" />
+        </span>
+
+        <input
+          value={searchValue}
+          onChange={(event) =>
+            onSearch(event.target.value)
+          }
+          placeholder="Try ‘wireless headphones’"
+          aria-label="Search products"
+        />
+
+        <kbd>Enter</kbd>
       </div>
+
+      <div className="results-toolbar">
+        <div
+          className="filter-tabs"
+          role="tablist"
+          aria-label="Filter by category"
+        >
+          {filters.map((filter) => (
+            <button
+              className={
+                category === filter ? "active" : ""
+              }
+              key={filter}
+              type="button"
+              onClick={() =>
+                handleCategoryChange(filter)
+              }
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
+        <label className="sort-select">
+          Sort by
+
+          <select
+            value={sort}
+            onChange={(event) =>
+              setSort(event.target.value)
+            }
+          >
+            <option>Recommended</option>
+            <option>Price: low to high</option>
+          </select>
+        </label>
+      </div>
+
       <div className="results-layout">
         <aside className="filter-panel">
-          <div className="filter-panel-heading"><h2>Filters</h2><button type="button" onClick={() => { setCategory('All products'); setMaxPrice(300); setMinRating(0) }}>Clear all</button></div>
-          <fieldset><legend>Category</legend>{filters.slice(1).map((filter) => <label className="filter-check" key={filter}><input type="checkbox" checked={category === filter} onChange={() => setCategory(category === filter ? 'All products' : filter)} /><span>{filter}</span><small>{products.filter((product) => product.category === filter).length}</small></label>)}</fieldset>
-          <fieldset><legend>Price range</legend><div className="price-range-label"><span>$0</span><strong>Up to ${maxPrice}</strong></div><input className="range-input" type="range" min="30" max="300" step="10" value={maxPrice} onChange={(event) => setMaxPrice(Number(event.target.value))} aria-label="Maximum price" /></fieldset>
-          <fieldset><legend>Customer rating</legend>{[4.5, 4, 3].map((rating) => <label className="filter-check" key={rating}><input type="radio" name="rating" checked={minRating === rating} onChange={() => setMinRating(rating)} /><span className="filter-stars" aria-label={`${rating} stars and up`}><Icon name="star" /><Icon name="star" /><Icon name="star" /><Icon name="star" /><Icon name="star" /> <small>& up</small></span></label>)}</fieldset>
+          <div className="filter-panel-heading">
+            <h2>Filters</h2>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+            >
+              Clear all
+            </button>
+          </div>
+
+          <fieldset>
+            <legend>Category</legend>
+
+            {categories.map((item) => (
+              <label
+                className="filter-check"
+                key={item.id}
+              >
+                <input
+                  type="checkbox"
+                  checked={category === item.name}
+                  onChange={() =>
+                    setCategory(
+                      category === item.name
+                        ? "All products"
+                        : item.name
+                    )
+                  }
+                />
+
+                <span>{item.name}</span>
+
+                <small>{item.count ?? 0}</small>
+              </label>
+            ))}
+          </fieldset>
+
+          <fieldset>
+            <legend>Price range</legend>
+
+            <div className="price-range-label">
+              <span>$0</span>
+              <strong>
+                Up to ${maxPrice}
+              </strong>
+            </div>
+
+            <input
+  className="range-input"
+  type="range"
+  min="0"
+  max="5000"
+              step="10"
+              value={maxPrice}
+              onChange={(event) =>
+                setMaxPrice(Number(event.target.value))
+              }
+              aria-label="Maximum price"
+            />
+          </fieldset>
         </aside>
+
         <section className="results-products">
-          <div className="results-count"><span><strong>{matchingProducts.length}</strong> products found</span></div>
-          <ProductGrid products={matchingProducts} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} emptyMessage="Try another search or clear a filter to see more products." />
+          <div className="results-count">
+            <span>
+              <strong>
+                {matchingProducts.length}
+              </strong>{" "}
+              products found
+            </span>
+          </div>
+
+          {isSearching ? (
+            <div className="empty-state">
+              <span>⌛</span>
+              <h3>Searching products...</h3>
+              <p>
+                We're finding products that match your
+                search.
+              </p>
+            </div>
+          ) : searchError ? (
+            <div className="empty-state">
+              <span>⚠️</span>
+              <h3>Unable to search products</h3>
+              <p>{searchError}</p>
+            </div>
+          ) : (
+            <ProductGrid
+              products={matchingProducts}
+              favorites={favorites}
+              onFavorite={onFavorite}
+              onSelect={onSelect}
+              emptyMessage="Try another search or clear a filter to see more products."
+            />
+          )}
         </section>
       </div>
     </div>
-  )
+  );
 }
