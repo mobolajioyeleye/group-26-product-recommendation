@@ -1,6 +1,8 @@
 import assert from "node:assert";
 import { isUUID, getFavourites, addFavourite, removeFavourite, resolveProductId } from "../src/services/favouritesApi.js";
-import { recordProductView, getUserActivities } from "../src/services/activityApi.js";
+import { recordProductView } from "../src/services/activityApi.js";
+
+/* global process */
 
 console.log("\n=======================================================");
 console.log("   TASK F6: ACTIVITY & FAVOURITES VERIFICATION");
@@ -124,7 +126,7 @@ await runAsyncTest("addFavourite issues POST request with { productId } body", a
   };
 
   try {
-    const data = await addFavourite("20000000-0000-0000-0000-000000000100");
+    await addFavourite("20000000-0000-0000-0000-000000000100");
     assert.strictEqual(capturedUrl.includes("/api/favourites"), true);
     assert.strictEqual(capturedOptions.method, "POST");
     assert.strictEqual(capturedOptions.credentials, "include");
