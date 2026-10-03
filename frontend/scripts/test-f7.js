@@ -1,6 +1,8 @@
 import assert from "node:assert";
 import { getRecommendations, normalizeRecommendations } from "../src/services/recommendationApi.js";
 
+/* global process */
+
 console.log("\n=======================================================");
 console.log("   TASK F7: RECOMMENDATION UI VERIFICATION");
 console.log("=======================================================\n");
