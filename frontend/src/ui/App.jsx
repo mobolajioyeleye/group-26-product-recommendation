@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { readFavorites } from "./data/catalogStorage";
+import { readFavorites, writeFavorites } from "./data/catalogStorage";
 import { getProducts, getCategories } from "../services/api";
 import { normalizeProducts } from "./data/productAdapter";
 import AuthPage from "./components/AuthPage";
