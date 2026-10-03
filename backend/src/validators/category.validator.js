@@ -17,7 +17,9 @@ const createCategoryValidator = [
 
 const updateCategoryValidator = [
   param("id")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Category ID must be a valid UUID"),
 
   body("name")
@@ -36,7 +38,9 @@ const updateCategoryValidator = [
 
 const categoryIdValidator = [
   param("id")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Category ID must be a valid UUID"),
 ];
 

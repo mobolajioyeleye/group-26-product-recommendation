@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useAuth } from "../../context/useAuth";
 
+const DEFAULT_ADMIN_CREDENTIALS = {
+  email: "admin@piqnora.com",
+  password: "Password123!",
+};
+
+const UNAUTHORIZED_MESSAGE =
+  "You are not authorized to access the admin dashboard. Administrator privileges are required.";
+
 export function AdminLogin() {
   const { login, logout } = useAuth();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState(DEFAULT_ADMIN_CREDENTIALS);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +23,11 @@ export function AdminLogin() {
       ...current,
       [name]: value,
     }));
+  }
+
+  function handleFillCredentials() {
+    setForm(DEFAULT_ADMIN_CREDENTIALS);
+    setError("");
   }
 
   async function handleSubmit(event) {
@@ -37,7 +46,7 @@ export function AdminLogin() {
 
       if (data?.user?.role !== "Administrator") {
         await logout();
-        setError("You are not authorized to access the admin dashboard.");
+        setError(UNAUTHORIZED_MESSAGE);
       }
     } catch (requestError) {
       setError(
@@ -76,6 +85,7 @@ export function AdminLogin() {
               onChange={handleChange}
               placeholder="admin@piqnora.com"
               disabled={loading}
+              autoComplete="username"
             />
           </label>
 
@@ -88,6 +98,7 @@ export function AdminLogin() {
               onChange={handleChange}
               placeholder="Enter password"
               disabled={loading}
+              autoComplete="current-password"
             />
           </label>
 
@@ -99,6 +110,16 @@ export function AdminLogin() {
             disabled={loading}
           >
             {loading ? "Signing in..." : "Sign in"}
+          </button>
+
+          <button
+            type="button"
+            className="admin-secondary-button"
+            onClick={handleFillCredentials}
+            disabled={loading}
+            style={{ marginTop: "4px" }}
+          >
+            Reset Demo Admin Credentials
           </button>
         </form>
       </section>

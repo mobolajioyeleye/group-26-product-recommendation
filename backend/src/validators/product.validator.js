@@ -24,7 +24,9 @@ const createProductValidator = [
   body("category_id")
     .notEmpty()
     .withMessage("Category ID is required")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Category ID must be a valid UUID"),
 
   body("image_url")
@@ -43,7 +45,9 @@ const createProductValidator = [
 // Update product
 const updateProductValidator = [
   param("id")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Product ID must be a valid UUID"),
 
   body("name")
@@ -68,7 +72,9 @@ const updateProductValidator = [
   body("category_id")
     .notEmpty()
     .withMessage("Category ID is required")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Category ID must be a valid UUID"),
 
   body("image_url")
@@ -87,7 +93,9 @@ const updateProductValidator = [
 // Product ID
 const productIdValidator = [
   param("id")
-    .isUUID()
+    .matches(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    )
     .withMessage("Product ID must be a valid UUID"),
 ];
 
