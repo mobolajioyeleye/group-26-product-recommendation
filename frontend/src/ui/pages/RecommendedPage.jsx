@@ -6,6 +6,7 @@ import { getRecommendations } from "../../services/recommendationApi";
 import "./pages.css";
 
 export default function RecommendedPage({
+  user,
   favorites,
   onFavorite,
   onSelect,
@@ -47,7 +48,7 @@ export default function RecommendedPage({
     return () => {
       isCancelled = true;
     };
-  }, [favorites]);
+  }, [favorites, user?.id]);
 
   const isPersonalized = Boolean(meta?.personalized);
   const topCategory = meta?.topCategories?.[0]?.categoryName;

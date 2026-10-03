@@ -33,7 +33,7 @@ export default function DiscoverPage({ products, categories = [], favorites, use
     return () => {
       isCancelled = true
     }
-  }, [favorites])
+  }, [favorites, user?.id])
 
   const trending = products.slice().sort((first, second) => second.rating - first.rating).slice(0, 4)
 
