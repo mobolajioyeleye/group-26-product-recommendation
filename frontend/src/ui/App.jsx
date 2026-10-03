@@ -90,17 +90,11 @@ function App() {
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("view") === "admin";
 
-  const storefrontCategories = Array.from(
-    new Set([
-      ...categories.map((category) => category.name),
-      ...catalogProducts.map((product) => product.category),
-    ])
-  )
-    .filter((name) => name && name !== "More")
-    .map((name) => ({
-      name,
+    const storefrontCategories = categories.map((category) => ({
+      id: category.id,
+      name: category.name,
       count: catalogProducts.filter(
-        (product) => product.category === name
+        (product) => product.category === category.name
       ).length,
     }));
 

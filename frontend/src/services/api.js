@@ -48,3 +48,19 @@ export const getCategories = async () => {
   const data = await apiRequest("/api/categories");
   return data.data || [];
 };
+
+export const searchProducts = async (query) => {
+  const data = await apiRequest(
+    `/api/products/search?q=${encodeURIComponent(query)}`
+  );
+
+  return data.data || [];
+};
+
+export const getProductsByCategory = async (categoryId) => {
+  const data = await apiRequest(
+    `/api/products/category/${categoryId}`
+  );
+
+  return data.data || [];
+};
