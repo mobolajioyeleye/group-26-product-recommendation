@@ -105,7 +105,6 @@ function App() {
   const adminRouteRequested =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("view") === "admin";
-
   // Sync favourites with the live backend when authenticated
   useEffect(() => {
     let isMounted = true;
@@ -157,19 +156,13 @@ function App() {
     };
   }, [currentUser]);
 
-  const storefrontCategories = Array.from(
-    new Set([
-      ...categories.map((category) => category.name),
-      ...catalogProducts.map((product) => product.category),
-    ])
-  )
-    .filter((name) => name && name !== "More")
-    .map((name) => ({
-      name,
-      count: catalogProducts.filter(
-        (product) => product.category === name
-      ).length,
-    }));
+  const storefrontCategories = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    count: catalogProducts.filter(
+      (product) => product.category === category.name
+    ).length,
+  }));
 
   if (adminRouteRequested) {
     return <AdminApp />;

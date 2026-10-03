@@ -73,7 +73,7 @@ export const getFavourites = async () => {
 export const addFavourite = async (productId) => {
   const targetId = resolveProductId(productId);
   if (!isUUID(targetId)) {
-    return { product_id: productId, offline: true };
+    throw new Error(`Cannot add favourite: invalid product ID format "${productId}".`);
   }
 
   try {
@@ -83,7 +83,7 @@ export const addFavourite = async (productId) => {
     });
     return response?.data;
   } catch (error) {
-    // If already in favourites on backend (409 Conflict), treat as successful sync
+    // If already in favourites on backend (409 Conflict), the product is already saved
     if (
       error?.response?.status === 409 ||
       error?.message?.toLowerCase().includes("already in your favourites")
@@ -91,20 +91,7 @@ export const addFavourite = async (productId) => {
       return { product_id: targetId, alreadyFavorited: true };
     }
 
-    // If backend rejects prototype/seed mock UUID format or product is not in database yet,
-    // gracefully retain favorite locally without showing an error to the user
-    if (
-      error?.message?.toLowerCase().includes("uuid") ||
-      error?.message?.toLowerCase().includes("not found") ||
-      error?.response?.status === 400 ||
-      error?.response?.status === 404
-    ) {
-      console.warn(
-        `[Favourites] Backend sync fallback for ${targetId}:`,
-        error.message
-      );
-      return { product_id: productId, offline: true };
-    }
+    // Propagate all real backend errors (400, 401, 404, 500, etc.) so UI knows DB update failed
     throw error;
   }
 };
@@ -117,30 +104,12 @@ export const addFavourite = async (productId) => {
 export const removeFavourite = async (productId) => {
   const targetId = resolveProductId(productId);
   if (!isUUID(targetId)) {
-    return { product_id: productId, offline: true };
+    throw new Error(`Cannot remove favourite: invalid product ID format "${productId}".`);
   }
 
-  try {
-    const response = await apiRequest(`/api/favourites/${targetId}`, {
-      method: "DELETE",
-    });
-    return response?.data;
-  } catch (error) {
-    // If backend rejects non-standard ID or favourite is not found on backend (404),
-    // gracefully succeed locally
-    if (
-      error?.response?.status === 404 ||
-      error?.response?.status === 400 ||
-      error?.message?.toLowerCase().includes("uuid") ||
-      error?.message?.toLowerCase().includes("not found")
-    ) {
-      console.warn(
-        `[Favourites] Backend remove fallback for ${targetId}:`,
-        error.message
-      );
-      return { product_id: productId, offline: true };
-    }
-    throw error;
-  }
+  const response = await apiRequest(`/api/favourites/${targetId}`, {
+    method: "DELETE",
+  });
+  return response?.data;
 };
 

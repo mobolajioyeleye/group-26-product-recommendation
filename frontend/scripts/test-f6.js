@@ -59,16 +59,18 @@ runTest("resolveProductId maps known mock slugs to database UUIDs", () => {
   assert.strictEqual(resolveProductId("smart-watch"), "20000000-0000-0000-0000-000000000106");
 });
 
-await runAsyncTest("addFavourite handles unmapped non-UUID gracefully (offline/mock fallback)", async () => {
-  const result = await addFavourite("unmapped-item-slug");
-  assert.strictEqual(result.product_id, "unmapped-item-slug");
-  assert.strictEqual(result.offline, true);
+await runAsyncTest("addFavourite rejects unmapped non-UUID with error", async () => {
+  await assert.rejects(
+    async () => addFavourite("unmapped-item-slug"),
+    /invalid product ID format/i
+  );
 });
 
-await runAsyncTest("removeFavourite handles unmapped non-UUID gracefully (offline/mock fallback)", async () => {
-  const result = await removeFavourite("unmapped-item-slug");
-  assert.strictEqual(result.product_id, "unmapped-item-slug");
-  assert.strictEqual(result.offline, true);
+await runAsyncTest("removeFavourite rejects unmapped non-UUID with error", async () => {
+  await assert.rejects(
+    async () => removeFavourite("unmapped-item-slug"),
+    /invalid product ID format/i
+  );
 });
 
 await runAsyncTest("recordProductView ignores unmapped non-UUID without throwing", async () => {
@@ -178,6 +180,59 @@ await runAsyncTest("recordProductView issues POST request to /api/activities/vie
     assert.strictEqual(capturedOptions.credentials, "include");
     const parsedBody = JSON.parse(capturedOptions.body);
     assert.strictEqual(parsedBody.productId, "20000000-0000-0000-0000-000000000100");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await runAsyncTest("addFavourite propagates backend 404/400 errors without treating as offline success", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 404,
+    json: async () => ({ message: "Product not found in catalog" }),
+  });
+
+  try {
+    await assert.rejects(
+      async () => addFavourite("20000000-0000-0000-0000-000000000100"),
+      /Product not found in catalog/i
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await runAsyncTest("removeFavourite propagates backend 404 error without treating as offline success", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 404,
+    json: async () => ({ message: "Favourite not found" }),
+  });
+
+  try {
+    await assert.rejects(
+      async () => removeFavourite("20000000-0000-0000-0000-000000000100"),
+      /Favourite not found/i
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await runAsyncTest("addFavourite handles 409 Conflict as alreadyFavorited", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 409,
+    json: async () => ({ message: "Product already in your favourites" }),
+  });
+
+  try {
+    const result = await addFavourite("20000000-0000-0000-0000-000000000100");
+    assert.strictEqual(result.alreadyFavorited, true);
+    assert.strictEqual(result.product_id, "20000000-0000-0000-0000-000000000100");
   } finally {
     globalThis.fetch = originalFetch;
   }
