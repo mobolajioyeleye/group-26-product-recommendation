@@ -3,14 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test:f6": "node scripts/test-f6.js",
-    "test:f8": "node scripts/test-f8.js"
-  },
+ "scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview",
+  "test:f6": "node scripts/test-f6.js",
+  "test:f7": "node scripts/test-f7.js",
+  "test:f8": "node scripts/test-f8.js"
+},
+
   "dependencies": {
     "@fortawesome/free-regular-svg-icons": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
