@@ -120,14 +120,13 @@ function App() {
               const slug = UUID_TO_SLUG[rawId];
               return slug ? [rawId, slug] : [rawId];
             });
-            const cached = readFavorites(currentUser) || [];
-            const merged = Array.from(new Set([...cached, ...backendIds]));
-            setFavorites(merged);
-            writeFavorites(currentUser, merged);
+            // The database is the single source of truth for authenticated users.
+            setFavorites(backendIds);
+            writeFavorites(currentUser, backendIds);
           }
         } catch (error) {
           console.warn(
-            "[Favourites] Using cached/local favourites fallback:",
+            "[Favourites] Live favourites fetch fallback:",
             error.message
           );
           if (isMounted) {
@@ -141,10 +140,21 @@ function App() {
 
     syncLiveFavorites();
 
+    const handleSyncOnFocus = () => {
+      if (document.visibilityState === "visible") {
+        syncLiveFavorites();
+      }
+    };
+
+    window.addEventListener("focus", handleSyncOnFocus);
+    document.addEventListener("visibilitychange", handleSyncOnFocus);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("focus", handleSyncOnFocus);
+      document.removeEventListener("visibilitychange", handleSyncOnFocus);
     };
-  }, [currentUser]);
+  }, [currentUser, page]);
 
   const storefrontCategories = Array.from(
     new Set([
@@ -275,7 +285,6 @@ function App() {
         key={authView}
         initialView={authView}
         onSuccess={async (loggedInUser) => {
-          setFavorites(readFavorites(loggedInUser));
           setPage(pendingPage);
           setNotice(
             `Welcome to piqnora, ${loggedInUser.name}.`
@@ -292,13 +301,12 @@ function App() {
                 const slug = UUID_TO_SLUG[rawId];
                 return slug ? [rawId, slug] : [rawId];
               });
-              const cached = readFavorites(loggedInUser) || [];
-              const merged = Array.from(new Set([...cached, ...backendIds]));
-              setFavorites(merged);
-              writeFavorites(loggedInUser, merged);
+              setFavorites(backendIds);
+              writeFavorites(loggedInUser, backendIds);
             }
           } catch (e) {
             console.warn("[Favourites] Login sync fallback:", e.message);
+            setFavorites(readFavorites(loggedInUser));
           }
         }}
       />
