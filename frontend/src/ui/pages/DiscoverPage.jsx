@@ -2,13 +2,46 @@ import { useEffect, useState } from 'react'
 import { CategoryIcon, Icon } from '../components/Icon'
 import { ProductGrid } from '../components/ProductCard'
 import { PageHeading, SectionHeading } from '../components/StoreShell'
-import { recommendProducts } from '../data/recommendations'
+import { getRecommendations } from '../../services/recommendationApi'
 import './pages.css'
 
 export default function DiscoverPage({ products, categories = [], favorites, user, onFavorite, onSelect, onNavigate, onCategory }) {
+  const [recommendations, setRecommendations] = useState([])
+  const [isRecLoading, setIsRecLoading] = useState(true)
+
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadPicks() {
+      setIsRecLoading(true)
+      try {
+        const result = await getRecommendations({ limit: 8 })
+        if (!isCancelled && Array.isArray(result.recommendations) && result.recommendations.length > 0) {
+          setRecommendations(result.recommendations)
+        }
+      } catch (err) {
+        console.warn("[DiscoverPage] Could not load recommendation picks:", err.message)
+      } finally {
+        if (!isCancelled) {
+          setIsRecLoading(false)
+        }
+      }
+    }
+
+    loadPicks()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [favorites])
+
   const trending = products.slice().sort((first, second) => second.rating - first.rating).slice(0, 4)
-  const picks = recommendProducts(products, favorites, 4)
-  const heroSlides = recommendProducts(products, favorites, 3)
+
+  // Use backend recommendations, falling back to top products if backend recommendations not loaded yet
+  const effectiveRecommendations = recommendations.length > 0 ? recommendations : products
+  const heroSlides = effectiveRecommendations.slice(0, 3)
+  const picks = (recommendations.length >= 4 ? recommendations.slice(0, 4) : effectiveRecommendations.slice(0, 4))
+
   const [activeSlide, setActiveSlide] = useState(0)
   const safeSlideIndex = heroSlides.length ? activeSlide % heroSlides.length : 0
   const featuredProduct = heroSlides[safeSlideIndex]
@@ -70,7 +103,7 @@ export default function DiscoverPage({ products, categories = [], favorites, use
           <div className="hero-sun" />
           {featuredProduct ? (
             <>
-              <span className="hero-note note-top"><Icon name="sparkle" /> New in {featuredProduct.category}</span>
+              <span className="hero-note note-top"><Icon name="sparkle" /> {featuredProduct.recommendationReason || `New in ${featuredProduct.category}`}</span>
               <div className="hero-carousel-viewport" aria-roledescription="carousel" aria-label="Products recommended for you">
                 <div className="hero-slide-track" style={{ transform: `translateX(-${safeSlideIndex * 100}%)` }}>
                   {heroSlides.map((product) => (
@@ -114,7 +147,14 @@ export default function DiscoverPage({ products, categories = [], favorites, use
 
       <section className="picks-section">
         <SectionHeading title="Picked just for you" detail="A few things we think you'll love" action="Explore more" onAction={() => onNavigate('recommended')} />
-        <ProductGrid products={picks} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
+        {isRecLoading && recommendations.length === 0 ? (
+          <div className="empty-state">
+            <span>⌛</span>
+            <h3>Finding your picks...</h3>
+          </div>
+        ) : (
+          <ProductGrid products={picks} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
+        )}
       </section>
       <footer className="store-footer"><span>© 2025 piqnora</span><span>Good things, thoughtfully found.</span><a href="#help">Need a hand?</a></footer>
     </div>
