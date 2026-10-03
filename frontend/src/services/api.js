@@ -3,13 +3,11 @@ const API_URL =
   "http://localhost:5000";
 
 export const apiRequest = async (endpoint, options = {}) => {
-  const sessionToken = typeof window !== "undefined" ? window.sessionStorage?.getItem("token") : null;
-  const localToken = typeof window !== "undefined" ? window.localStorage?.getItem("token") : null;
-  const token = sessionToken || localToken;
-
-  if (endpoint.includes("/api/favourites")) {
-    console.log(`[API] ${options.method || "GET"} ${endpoint} | sessionToken: ${Boolean(sessionToken)} | localToken: ${Boolean(localToken)}`);
-  }
+  const token =
+    typeof window !== "undefined"
+      ? window.sessionStorage?.getItem("token") ||
+        window.localStorage?.getItem("token")
+      : null;
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
