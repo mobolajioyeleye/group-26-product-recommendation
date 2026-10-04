@@ -4,6 +4,13 @@ import { Icon } from "./Icon";
 import shoppingImage from "../../../img/login img.png";
 import "../App.css";
 
+import {
+  validateRequired,
+  validateEmail,
+  validatePassword,
+} from "../../utils/validation";
+import { getErrorMessage } from "../../utils/errorHandler";
+
 function PiqnoraLogo() {
   return (
     <div className="piqnora-logo">
@@ -69,8 +76,37 @@ export default function AuthPage({ initialView = "login", onSuccess }) {
           formData.get("confirmPassword") || ""
         );
 
+        const nameError = validateRequired(name, "Full name");
+        if (nameError) {
+          setError(nameError);
+          return;
+        }
+
+        const emailError = validateEmail(email);
+        if (emailError) {
+          setError(emailError);
+          return;
+        }
+
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          setError(passwordError);
+          return;
+        }
+
+        const confirmPasswordError = validateRequired(
+          confirmPassword,
+          "Confirm password"
+        );
+        if (confirmPasswordError) {
+          setError(confirmPasswordError);
+          return;
+        }
+
         if (password !== confirmPassword) {
-          setError("Your passwords do not match. Please check and try again.");
+          setError(
+            "Your passwords do not match. Please check and try again."
+          );
           return;
         }
 
@@ -82,14 +118,25 @@ export default function AuthPage({ initialView = "login", onSuccess }) {
       const email = String(formData.get("email") || "").trim();
       const password = String(formData.get("password") || "");
 
+      const emailError = validateEmail(email);
+      if (emailError) {
+        setError(emailError);
+        return;
+      }
+
+      const passwordRequiredError = validateRequired(
+        password,
+        "Password"
+      );
+      if (passwordRequiredError) {
+        setError(passwordRequiredError);
+        return;
+      }
+
       const data = await login(email, password);
       onSuccess?.(data.user);
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Something went wrong. Please try again."
-      );
+      setError(getErrorMessage(err));
     }
   }
 
