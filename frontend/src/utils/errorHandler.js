@@ -5,6 +5,16 @@ export const getErrorMessage = (error) => {
 
   const status = error.response?.status;
 
+  // Network/server unreachable error
+  if (
+    !error.response &&
+    (error.name === "TypeError" ||
+      error.message === "Failed to fetch" ||
+      error.message?.toLowerCase().includes("network"))
+  ) {
+    return "Unable to connect to server. Please check your connection and try again.";
+  }
+
   if (error.response?.data?.message) {
     return error.response.data.message;
   }
