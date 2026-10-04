@@ -13,6 +13,12 @@ import RecommendedPage from "./pages/RecommendedPage";
 import SearchPage from "./pages/SearchPage";
 import WelcomePage from "./pages/WelcomePage";
 import { useAuth } from "../context/useAuth";
+
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import ErrorMessage from "../components/common/ErrorMessage";
+import EmptyState from "../components/common/EmptyState";
+import { getErrorMessage } from "../utils/errorHandler";
+
 import {
   getFavourites,
   addFavourite,
@@ -31,6 +37,7 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState("");
+  const [catalogRetryCount, setCatalogRetryCount] = useState(0);
 
   // Restore the correct starting page after a browser refresh.
   const [page, setPage] = useState(() => {
@@ -39,10 +46,14 @@ function App() {
         typeof window !== "undefined"
           ? window.sessionStorage.getItem("piqnora-page")
           : null;
-      if (savedPage) return savedPage;
+
+      if (savedPage) {
+        return savedPage;
+      }
     } catch {
       // Ignore session storage errors.
     }
+
     return user ? "home" : "welcome";
   });
 
@@ -85,9 +96,7 @@ function App() {
         setCategories(backendCategories);
       } catch (error) {
         if (!cancelled) {
-          setProductsError(
-            error.message || "Unable to load products right now."
-          );
+          setProductsError(getErrorMessage(error));
         }
       } finally {
         if (!cancelled) {
@@ -101,7 +110,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [catalogRetryCount]);
 
   const adminRouteRequested =
     typeof window !== "undefined" &&
@@ -122,6 +131,7 @@ function App() {
             const backendIds = liveData.flatMap((item) => {
               const rawId = item.product_id || item.productId || item.id;
               const slug = UUID_TO_SLUG[rawId];
+
               return slug ? [rawId, slug] : [rawId];
             });
 
@@ -135,7 +145,9 @@ function App() {
             setFavorites([]);
           }
         } finally {
-          if (isMounted) setFavoritesLoading(false);
+          if (isMounted) {
+            setFavoritesLoading(false);
+          }
         }
       } else {
         setFavorites([]);
@@ -233,9 +245,7 @@ function App() {
       return;
     }
 
-    const product = catalogProducts.find(
-      (item) => item.id === productId
-    );
+    const product = catalogProducts.find((item) => item.id === productId);
 
     const wasSaved = isProductFavorited(favorites, productId);
     const targetUuid = SLUG_TO_UUID[productId];
@@ -280,7 +290,9 @@ function App() {
         writeFavorites(currentUser, favorites);
       }
 
-      setNotice(`Could not update favourites: ${error.message}`);
+      setNotice(
+        `Could not update favourites: ${getErrorMessage(error)}`
+      );
     }
   }
 
@@ -297,9 +309,7 @@ function App() {
         initialView={authView}
         onSuccess={async (loggedInUser) => {
           setPage(pendingPage);
-          setNotice(
-            `Welcome to piqnora, ${loggedInUser.name}.`
-          );
+          setNotice(`Welcome to piqnora, ${loggedInUser.name}.`);
 
           window.scrollTo({
             top: 0,
@@ -313,6 +323,7 @@ function App() {
               const backendIds = liveData.flatMap((item) => {
                 const rawId = item.product_id || item.productId || item.id;
                 const slug = UUID_TO_SLUG[rawId];
+
                 return slug ? [rawId, slug] : [rawId];
               });
 
@@ -324,6 +335,7 @@ function App() {
               "[Favourites] Login sync fallback:",
               e.message
             );
+
             setFavorites(readFavorites(loggedInUser));
           }
         }}
@@ -349,9 +361,7 @@ function App() {
     content = (
       <div className="page-content">
         <div className="empty-state">
-          <span>⌛</span>
-          <h3>Loading products...</h3>
-          <p>We're getting the latest products for you.</p>
+          <LoadingSpinner message="Loading products..." />
         </div>
       </div>
     );
@@ -359,9 +369,10 @@ function App() {
     content = (
       <div className="page-content">
         <div className="empty-state">
-          <span>⚠️</span>
-          <h3>Unable to load products</h3>
-          <p>{productsError}</p>
+          <ErrorMessage
+            message={productsError}
+            onRetry={() => setCatalogRetryCount((count) => count + 1)}
+          />
         </div>
       </div>
     );
@@ -372,9 +383,7 @@ function App() {
           <WelcomePage
             categories={storefrontCategories}
             onNavigate={navigate}
-            onCategory={(category) =>
-              navigate("search", category)
-            }
+            onCategory={(category) => navigate("search", category)}
           />
         );
         break;
@@ -383,9 +392,7 @@ function App() {
         content = (
           <DiscoverPage
             {...sharedProps}
-            onCategory={(category) =>
-              navigate("search", category)
-            }
+            onCategory={(category) => navigate("search", category)}
           />
         );
         break;
@@ -413,9 +420,10 @@ function App() {
         ) : (
           <div className="page-content">
             <div className="empty-state">
-              <span>🔍</span>
-              <h3>Product not found</h3>
-              <p>The selected product is no longer available.</p>
+              <EmptyState
+                title="Product not found"
+                message="The selected product is no longer available."
+              />
             </div>
           </div>
         );
@@ -443,11 +451,10 @@ function App() {
           <WelcomePage
             categories={storefrontCategories}
             onNavigate={navigate}
-            onCategory={(category) =>
-              navigate("search", category)
-            }
+            onCategory={(category) => navigate("search", category)}
           />
         );
+        break;
     }
   }
 
