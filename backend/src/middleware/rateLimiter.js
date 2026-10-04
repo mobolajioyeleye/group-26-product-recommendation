@@ -8,7 +8,7 @@ const ApiError = require("../utils/ApiError");
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes window
-  max: process.env.NODE_ENV === "test" ? 100 : 10, // 10 attempts in prod, 100 in test
+  max: process.env.NODE_ENV === "production" ? 10 : 1000, // 10 attempts in prod, 1000 in dev/test
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next) => {
