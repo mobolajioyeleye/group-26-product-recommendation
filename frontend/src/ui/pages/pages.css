@@ -1255,7 +1255,7 @@
   .detail-image { min-height: 320px; }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
   .discovery-hero {
     min-height: 290px;
     grid-template-columns: 1fr 0.85fr;
@@ -1309,9 +1309,29 @@
   .detail-tabs-section { padding: 0 14px 15px; }
 
   .profile-layout { grid-template-columns: 1fr; }
-  .profile-menu { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .profile-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-menu button { justify-content: center; gap: 5px; padding: 0 4px; font-size: 8px; }
-  .profile-menu .profile-logout { margin-top: 0; border-top: 0; }
+  .profile-menu .profile-logout { grid-column: 1 / -1; margin-top: 0; border-top: 0; }
+  .profile-identity > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+  .profile-fields strong { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  .discovery-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr); }
+  .hero-copy { padding-right: 4px; }
+  .hero-kicker { max-width: 100%; font-size: 6px; letter-spacing: 0.08em; }
+  .hero-copy h2 { font-size: 23px; }
+  .hero-carousel-controls { flex-wrap: wrap; }
+  .filter-panel { grid-template-columns: minmax(0, 1fr); }
+  .filter-panel-heading { grid-column: auto; }
+  .filter-panel fieldset { min-width: 0; }
+  .detail-gallery { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; }
+  .detail-thumbnails button { width: 35px; height: 42px; }
+  .profile-menu { grid-template-columns: minmax(0, 1fr); }
+  .profile-menu button,
+  .profile-menu .profile-logout { grid-column: auto; justify-content: flex-start; padding: 0 9px; }
+  .profile-identity { flex-wrap: wrap; }
+  .member-badge { margin-left: 55px; }
 }
 
 @media (max-width: 460px) {
@@ -1328,7 +1348,13 @@
   .hero-product-tag strong { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hero-sun { width: 175px; height: 175px; }
 
-  .page-heading { gap: 8px; }
+  .page-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .page-heading > div:first-child { min-width: 0; }
+  .page-heading-action { max-width: 100%; }
   .page-heading h1 { font-size: 23px; }
   .page-eyebrow { font-size: 8px; }
   .page-description { max-width: 250px; font-size: 10px; line-height: 1.5; }
