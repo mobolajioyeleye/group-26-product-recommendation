@@ -24,29 +24,45 @@ const app = express();
 // Security HTTP headers via Helmet
 app.use(helmet());
 
+// Allow the deployed Render URL so Swagger UI can call the API
+const swaggerOrigin =
+  "https://group-26-product-recommendation.onrender.com";
+
 // Hardened CORS configuration with credentials support
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman) or allowed domains
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS policy does not allow access from this origin"));
+      // Allow requests with no origin (curl, Postman, server-to-server requests)
+      if (!origin) {
+        return callback(null, true);
       }
+
+      // Allow configured frontend origins and the deployed Swagger origin
+      if (allowedOrigins.includes(origin) || origin === swaggerOrigin) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("CORS policy does not allow access from this origin")
+      );
     },
+
     credentials: true,
+
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
 
 // Payload size limit to prevent denial of service (DoS) via large payloads
 app.use(express.json({ limit: "10kb" }));
+
 app.use(cookieParser());
 
 // General API rate limiter for /api routes
 app.use("/api", apiLimiter);
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
