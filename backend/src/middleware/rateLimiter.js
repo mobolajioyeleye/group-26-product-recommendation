@@ -4,21 +4,39 @@ const ApiError = require("../utils/ApiError");
 /**
  * Rate Limiter for Authentication Endpoints (/users/login, /users/register)
  * Protects against brute-force credential stuffing and enumeration attacks.
- * In test environment, limit is elevated so test suites run smoothly.
+ *
+ * Limits:
+ * - Production: 10 attempts per 15 minutes
+ * - Test: 5 attempts per 15 minutes
+ * - Development: 1000 attempts per 15 minutes
  */
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes window
-  max: process.env.NODE_ENV === "production" ? 10 : 1000, // 10 attempts in prod, 1000 in dev/test
+  windowMs: 15 * 60 * 1000,
+  max:
+    process.env.NODE_ENV === "production"
+      ? 10
+      : process.env.NODE_ENV === "test"
+        ? 5
+        : 1000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next) => {
-    next(new ApiError(429, "Too many authentication attempts, please try again after 15 minutes"));
+    next(
+      new ApiError(
+        429,
+        "Too many authentication attempts, please try again after 15 minutes"
+      )
+    );
   },
 });
 
 /**
  * General API Rate Limiter
  * Mitigates denial-of-service and aggressive scraping attempts across the API.
+ *
+ * Limits:
+ * - Test: 1000 requests per 15 minutes
+ * - Development/Production: 300 requests per 15 minutes
  */
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -26,7 +44,12 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next) => {
-    next(new ApiError(429, "Too many requests from this IP, please try again later"));
+    next(
+      new ApiError(
+        429,
+        "Too many requests from this IP, please try again later"
+      )
+    );
   },
 });
 

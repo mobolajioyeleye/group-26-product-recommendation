@@ -4,6 +4,8 @@
  * role-based access control (RBAC), horizontal privilege separation,
  * password leakage prevention, and brute-force rate limiting.
  */
+process.env.NODE_ENV = "test";
+
 const assert = require("assert");
 const http = require("http");
 const jwt = require("jsonwebtoken");
